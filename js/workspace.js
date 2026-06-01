@@ -108,8 +108,10 @@ function renderDrafts(drafts) {
       <article class="workspace-card">
         <button class="workspace-card-delete" type="button" data-draft-id="${draft.id}" aria-label="Delete draft">✕</button>
         <div class="workspace-card-header">
-          <h3>${escapeHtml(draft.draft_name || "Untitled draft")}</h3>
-          ${totalMarkup}
+          <div>
+            <h3>${escapeHtml(draft.draft_name || "Untitled draft")}</h3>
+            ${totalMarkup}
+          </div>
         </div>
         ${meta ? `<p class="workspace-card-meta">${meta}</p>` : ""}
         <p class="workspace-card-meta">Updated ${escapeHtml(formatRelativeDate(draft.updated_at))}</p>
@@ -163,8 +165,10 @@ function renderInvoices(invoices) {
       <article class="workspace-card">
         <button class="workspace-card-delete" type="button" data-invoice-id="${invoice.id}" aria-label="Delete invoice">✕</button>
         <div class="workspace-card-header">
-          <h3>${escapeHtml(invoice.invoice_number || "Saved invoice")}</h3>
-          <span class="card-amount">${escapeHtml(formatStoredMoney(invoice.total_cents, invoice.currency || "USD"))}</span>
+          <div>
+            <h3>${escapeHtml(invoice.invoice_number || "Saved invoice")}</h3>
+            <span class="card-amount">${escapeHtml(formatStoredMoney(invoice.total_cents, invoice.currency || "USD"))}</span>
+          </div>
         </div>
         ${client ? `<p class="workspace-card-meta">${client}</p>` : ""}
         <p class="workspace-card-meta">${escapeHtml(formatRelativeDate(invoice.issue_date))} ${statusBadge(invoice.status)}</p>

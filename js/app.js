@@ -1159,8 +1159,8 @@ function renderWorkspaceLists() {
           <div>
             <h3>${escapeHtml(invoice.invoice_number || "Saved invoice")}</h3>
             <p class="workspace-card-meta">${escapeHtml(formatRelativeDate(invoice.issue_date))} · ${escapeHtml(invoice.status || "draft")}</p>
+            <p class="card-amount">${escapeHtml(formatStoredMoney(invoice.total_cents, invoice.currency || "USD"))}</p>
           </div>
-          <p>${escapeHtml(formatStoredMoney(invoice.total_cents, invoice.currency || "USD"))}</p>
         </div>
         <div class="workspace-card-actions button-row">
           <button class="button button-secondary workspace-load-invoice" type="button" data-invoice-id="${invoice.id}">Open invoice</button>
