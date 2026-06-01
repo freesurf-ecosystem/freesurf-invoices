@@ -106,6 +106,7 @@ function renderDrafts(drafts) {
         const totalMarkup = total ? `<span class="card-amount">${escapeHtml(total)}</span>` : "";
         return `
       <article class="workspace-card">
+        <button class="workspace-card-delete" type="button" data-draft-id="${draft.id}" aria-label="Delete draft">✕</button>
         <div class="workspace-card-header">
           <h3>${escapeHtml(draft.draft_name || "Untitled draft")}</h3>
           ${totalMarkup}
@@ -133,6 +134,19 @@ function renderDrafts(drafts) {
       loadIntoEditor({ ...draft.payload_json, savedDraftId: draft.id });
     });
   });
+
+  list.querySelectorAll(".workspace-card-delete[data-draft-id]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Delete this draft? This cannot be undone.")) return;
+      try {
+        const client = await getSupabaseClient();
+        await client.from("invoice_drafts").delete().eq("id", button.dataset.draftId);
+        await refreshWorkspacePage();
+      } catch {
+        // ignore
+      }
+    });
+  });
 }
 
 function statusBadge(status) {
@@ -147,6 +161,7 @@ function renderInvoices(invoices) {
         const client = invoice.client?.client_name ? escapeHtml(invoice.client.client_name) : "";
         return `
       <article class="workspace-card">
+        <button class="workspace-card-delete" type="button" data-invoice-id="${invoice.id}" aria-label="Delete invoice">✕</button>
         <div class="workspace-card-header">
           <h3>${escapeHtml(invoice.invoice_number || "Saved invoice")}</h3>
           <span class="card-amount">${escapeHtml(formatStoredMoney(invoice.total_cents, invoice.currency || "USD"))}</span>
@@ -192,6 +207,20 @@ function renderInvoices(invoices) {
           rate: Number(item.unit_price_cents || 0) / 100,
         })),
       });
+    });
+  });
+
+  list.querySelectorAll(".workspace-card-delete[data-invoice-id]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Delete this invoice? This cannot be undone.")) return;
+      try {
+        const client = await getSupabaseClient();
+        await client.from("invoice_items").delete().eq("invoice_id", button.dataset.invoiceId);
+        await client.from("invoices").delete().eq("id", button.dataset.invoiceId);
+        await refreshWorkspacePage();
+      } catch {
+        // ignore
+      }
     });
   });
 }

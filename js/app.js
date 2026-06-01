@@ -1137,6 +1137,7 @@ function renderWorkspaceLists() {
   draftsList.innerHTML = draftsCache.length > 0
     ? draftsCache.map((draft) => `
       <article class="workspace-card">
+        <button class="workspace-card-delete" type="button" data-draft-id="${draft.id}" aria-label="Delete draft">✕</button>
         <div class="workspace-card-header">
           <div>
             <h3>${escapeHtml(draft.draft_name || "Untitled draft")}</h3>
@@ -1153,6 +1154,7 @@ function renderWorkspaceLists() {
   invoicesList.innerHTML = invoicesCache.length > 0
     ? invoicesCache.map((invoice) => `
       <article class="workspace-card">
+        <button class="workspace-card-delete" type="button" data-invoice-id="${invoice.id}" aria-label="Delete invoice">✕</button>
         <div class="workspace-card-header">
           <div>
             <h3>${escapeHtml(invoice.invoice_number || "Saved invoice")}</h3>
@@ -1207,6 +1209,33 @@ function renderWorkspaceLists() {
         })),
       }, "Invoice loaded from your account.");
       setWorkspaceTab("invoices");
+    });
+  });
+
+  draftsList.querySelectorAll(".workspace-card-delete[data-draft-id]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Delete this draft? This cannot be undone.")) return;
+      try {
+        const client = await getConfiguredSupabaseClient();
+        await client.from("invoice_drafts").delete().eq("id", button.dataset.draftId);
+        await refreshWorkspace();
+      } catch {
+        // ignore
+      }
+    });
+  });
+
+  invoicesList.querySelectorAll(".workspace-card-delete[data-invoice-id]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Delete this invoice? This cannot be undone.")) return;
+      try {
+        const client = await getConfiguredSupabaseClient();
+        await client.from("invoice_items").delete().eq("invoice_id", button.dataset.invoiceId);
+        await client.from("invoices").delete().eq("id", button.dataset.invoiceId);
+        await refreshWorkspace();
+      } catch {
+        // ignore
+      }
     });
   });
 }

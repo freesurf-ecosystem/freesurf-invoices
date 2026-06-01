@@ -148,9 +148,10 @@ export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices
                 </Pressable>
                 <Pressable
                   onPress={() => deleteDraft(item.id)}
-                  style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.6 }]}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.deleteX, pressed && { opacity: 0.4 }]}
                 >
-                  <Text style={styles.deleteBtnText}>Delete</Text>
+                  <Text style={styles.deleteXText}>✕</Text>
                 </Pressable>
               </View>
             );
@@ -173,20 +174,26 @@ const styles = StyleSheet.create({
     borderColor: "#d8cfc3",
     borderRadius: 16,
     overflow: "hidden",
+    position: "relative",
   },
-  cardBody: { padding: 16, gap: 4 },
+  cardBody: { padding: 16, paddingRight: 36, gap: 4 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardTitle: { fontSize: 15, fontWeight: "600", color: "#1f1a17", flex: 1 },
   cardAmount: { fontSize: 15, fontWeight: "700", color: "#0d6b61", marginLeft: 8 },
   cardMeta: { fontSize: 13, color: "#675f58" },
   cardDate: { fontSize: 12, color: "#9a8f87" },
-  deleteBtn: {
-    borderTopWidth: 1,
-    borderTopColor: "#e8e0d6",
-    paddingVertical: 10,
+  deleteX: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(0,0,0,0.06)",
     alignItems: "center",
+    justifyContent: "center",
   },
-  deleteBtnText: { fontSize: 13, fontWeight: "600", color: "#c0392b" },
+  deleteXText: { fontSize: 12, color: "#9a8f87", lineHeight: 14 },
   empty: {
     margin: 20,
     padding: 20,

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -79,6 +80,23 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignOut, onEd
     setLoading(false);
   }
 
+  function confirmDeleteInvoice(id: string) {
+    Alert.alert(
+      "Delete invoice",
+      "This will permanently delete the invoice and its line items. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteInvoice(id) },
+      ]
+    );
+  }
+
+  async function deleteInvoice(id: string) {
+    await supabase.from("invoice_items").delete().eq("invoice_id", id);
+    await supabase.from("invoices").delete().eq("id", id);
+    setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -137,6 +155,13 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignOut, onEd
                     <Text style={styles.editBtnText}>Edit</Text>
                   </Pressable>
                 </View>
+                <Pressable
+                  onPress={() => confirmDeleteInvoice(item.id)}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.deleteX, pressed && { opacity: 0.4 }]}
+                >
+                  <Text style={styles.deleteXText}>✕</Text>
+                </Pressable>
               </View>
             );
           }}
@@ -158,7 +183,9 @@ const styles = StyleSheet.create({
     borderColor: "#d8cfc3",
     borderRadius: 16,
     padding: 16,
+    paddingRight: 36,
     gap: 4,
+    position: "relative",
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardTitle: { fontSize: 15, fontWeight: "600", color: "#1f1a17", flex: 1 },
@@ -176,6 +203,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d6b6122",
   },
   editBtnText: { fontSize: 12, fontWeight: "600", color: "#0d6b61" },
+  deleteX: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(0,0,0,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteXText: { fontSize: 12, color: "#9a8f87", lineHeight: 14 },
   empty: {
     margin: 20,
     padding: 20,
