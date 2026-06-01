@@ -174,7 +174,7 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
   async function loadInvoiceRecord(id: string) {
     const { data } = await supabase
       .from("invoices")
-      .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email), invoice_items(description, quantity, unit_price_cents)")
+      .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email, address_line_1), invoice_items(description, quantity, unit_price_cents)")
       .eq("id", id)
       .single();
     if (!data) return;
@@ -184,9 +184,10 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
     if (data.due_date) setDueDate(data.due_date as string);
     if (data.currency && (CURRENCIES as readonly string[]).includes(data.currency)) setCurrency(data.currency as Currency);
     if (data.notes) setNotes(data.notes);
-    const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null } | null;
+    const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null; address_line_1: string | null } | null;
     if (client?.client_name) setClientName(client.client_name);
     if (client?.email) setClientEmail(client.email);
+    if (client?.address_line_1) setClientAddress(client.address_line_1);
     const rawItems = Array.isArray(data.invoice_items) ? data.invoice_items : [];
     if (rawItems.length > 0) {
       setItems(rawItems.map((i: { description: string | null; quantity: number | null; unit_price_cents: number | null }) => ({
@@ -338,12 +339,13 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
       ...(logoUrl.startsWith("http") ? { logo_url: logoUrl } : {}),
     };
     // Select first so we can INSERT or UPDATE explicitly (avoids RLS upsert issues)
+    // maybeSingle() returns null (no error) when 0 rows — safer than single() which errors on 0 rows
     const { data: existing } = await supabase
       .from("invoice_business_profiles")
       .select("id")
       .eq("user_id", user.id)
       .limit(1)
-      .single();
+      .maybeSingle();
     if (existing?.id) {
       await supabase.from("invoice_business_profiles").update(profileData).eq("user_id", user.id);
       return existing.id as string;
@@ -455,10 +457,14 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
         .maybeSingle();
       if (existingClient?.id) {
         clientId = existingClient.id;
-        // Update email in case it changed
+        // Refresh all mutable fields on the existing client record
         await supabase
           .from("invoice_clients")
-          .update({ email: clientEmail || null })
+          .update({
+            business_profile_id: businessProfileId,
+            email: clientEmail || null,
+            address_line_1: clientAddress || null,
+          })
           .eq("id", clientId);
       } else {
         const { data: newClient, error: clientErr } = await supabase

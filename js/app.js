@@ -314,7 +314,6 @@ async function upsertClientRecord(client, user, businessProfileId) {
     .from("invoice_clients")
     .select("id")
     .eq("user_id", user.id)
-    .eq("business_profile_id", businessProfileId)
     .eq("client_name", state.clientName)
     .limit(1);
 
