@@ -1,4 +1,8 @@
 import { getSupabaseClient as getConfiguredSupabaseClient, isSupabaseConfigured } from "./supabase-client.js";
+import { getSharedSession, clearSharedSession } from "./cnxt-auth.js";
+
+// Restore cross-domain session from cookie into Supabase localStorage
+getSharedSession();
 
 const STORAGE_KEY = "cnxt-invoices-draft-v2";
 const INVOICE_SEQUENCE_KEY = "cnxt-invoices-next-sequence-v1";
@@ -1653,6 +1657,7 @@ if (menuSignOutButton) {
   menuSignOutButton.addEventListener("click", async () => {
     const client = await getConfiguredSupabaseClient().catch(() => null);
     if (client) await client.auth.signOut();
+    await clearSharedSession();
     setMenuAuthState(false);
     window.location.href = "./auth.html";
   });

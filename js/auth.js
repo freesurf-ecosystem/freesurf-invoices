@@ -1,4 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabase-client.js";
+import { setSharedSession } from "./cnxt-auth.js";
 
 const POST_AUTH_RETURN_KEY = "cnxt-invoices-post-auth-return";
 const POST_AUTH_ACTION_KEY = "cnxt-invoices-post-auth-action";
@@ -87,6 +88,9 @@ signInForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  // Persist to shared .cnxt.to cookie for cross-domain auth
+  await setSharedSession();
+
   signInForm.reset();
   if (!redirectAfterAuth()) {
     window.location.href = "./index.html";
@@ -124,6 +128,7 @@ signUpForm.addEventListener("submit", async (event) => {
 
   signUpForm.reset();
   if (data.session?.user) {
+    await setSharedSession();
     await refreshSessionStatus();
     redirectAfterAuth();
     return;
@@ -161,6 +166,7 @@ signUpForm.addEventListener("submit", async (event) => {
     // onAuthStateChange fires with SIGNED_IN. Redirect into the app immediately.
     client.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        setSharedSession();
         if (!redirectAfterAuth()) {
           window.location.href = "./index.html";
         }
