@@ -1,8 +1,8 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabase-client.js";
-import { setSharedSession } from "./cnxt-auth.js";
+import { setSharedSession } from "./freesurf-auth.js";
 
-const POST_AUTH_RETURN_KEY = "cnxt-invoices-post-auth-return";
-const POST_AUTH_ACTION_KEY = "cnxt-invoices-post-auth-action";
+const POST_AUTH_RETURN_KEY = "freesurf-invoices-post-auth-return";
+const POST_AUTH_ACTION_KEY = "freesurf-invoices-post-auth-action";
 const signInForm = document.querySelector("#sign-in-form");
 const signUpForm = document.querySelector("#sign-up-form");
 const signInTab = document.querySelector("#show-sign-in");
@@ -88,7 +88,7 @@ signInForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  // Persist to shared .cnxt.to cookie for cross-domain auth
+  // Persist to shared cookie for cross-domain auth
   await setSharedSession();
 
   signInForm.reset();

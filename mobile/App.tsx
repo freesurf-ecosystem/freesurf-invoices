@@ -8,7 +8,7 @@ Sentry.init({
   dsn: "https://2681c17429bc51f4bf11e6939f827279@o4511383545184256.ingest.us.sentry.io/4511383549575168",
   tracesSampleRate: 0.2,
   environment: __DEV__ ? "development" : "production",
-  enabled: !__DEV__, // only send events in production/preview builds
+  enabled: !__DEV__,
 });
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import AuthScreen from "./screens/AuthScreen";
@@ -21,26 +21,27 @@ export type RootStackParamList = {
   CreateInvoice: { draftId?: string; draftPayload?: Record<string, unknown>; invoiceId?: string } | undefined;
   Drafts: undefined;
   Invoices: undefined;
+  Auth: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App() {
-  const [session, setSession] = useState<boolean | null>(null); // null = loading
+  const [session, setSession] = useState<boolean | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(Boolean(data.session));
+      setInitialized(true);
     });
-
     const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(Boolean(s));
     });
-
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if (session === null) {
+  if (!initialized) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f4f1ea" }}>
         <ActivityIndicator color="#0d6b61" />
@@ -48,14 +49,7 @@ function App() {
     );
   }
 
-  if (!session) {
-    return (
-      <SafeAreaProvider>
-        <AuthScreen onAuthenticated={() => setSession(true)} />
-      </SafeAreaProvider>
-    );
-  }
-
+  // No auth gate — app works fully without login. Sign in is optional for cloud sync.
   return (
     <SafeAreaProvider>
       <NavigationContainer>

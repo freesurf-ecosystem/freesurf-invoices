@@ -3,42 +3,42 @@
 
   <!-- Invoice maker (main tool) -->
   <url>
-    <loc>https://invoices.cnxt.to/</loc>
+    <loc>https://invoices.freesurf.tools/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Auth -->
   <url>
-    <loc>https://invoices.cnxt.to/auth.html</loc>
+    <loc>https://invoices.freesurf.tools/auth.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- Saved drafts (requires auth — lower priority) -->
   <url>
-    <loc>https://invoices.cnxt.to/drafts.html</loc>
+    <loc>https://invoices.freesurf.tools/drafts.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- Previous invoices (requires auth — lower priority) -->
   <url>
-    <loc>https://invoices.cnxt.to/invoices.html</loc>
+    <loc>https://invoices.freesurf.tools/invoices.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- Privacy policy -->
   <url>
-    <loc>https://invoices.cnxt.to/privacy.html</loc>
+    <loc>https://invoices.freesurf.tools/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <!-- Terms of service -->
   <url>
-    <loc>https://invoices.cnxt.to/terms.html</loc>
+    <loc>https://invoices.freesurf.tools/terms.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

@@ -429,7 +429,7 @@ ${taxAmt > 0 ? `<tr><td>Tax (${taxRate}%)</td><td>${sym}${taxAmt.toFixed(2)}</td
 <tr class="grand"><td>Total (${currency})</td><td>${sym}${total.toFixed(2)}</td></tr>
 </table></div>
 ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
-<div class="footer">Free Invoice Maker | cnxt to invoices</div>
+<div class="footer">Free Invoice Maker | FreeSurf Invoices</div>
 </body></html>`;
   }
 
@@ -800,7 +800,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
             <Text style={[styles.previewTotVal, { fontWeight: "700", color: "#0d6b61", fontSize: 15 }]}>{sym}{total.toFixed(2)}</Text>
           </View>
           {notes ? <Text style={styles.previewNotes}>{notes}</Text> : null}
-          <Text style={styles.previewBrand}>Free Invoice Maker | cnxt to invoices</Text>
+          <Text style={styles.previewBrand}>Free Invoice Maker | FreeSurf Invoices</Text>
       </View>
 
       <Pressable style={styles.button} onPress={downloadInvoice} disabled={exporting}>

@@ -1,5 +1,8 @@
 # cnxt to invoices — Development Roadmap
 
+Concept: Invoices / payment processing
+
+
 This document tracks planned, in-progress, and potential features. The north star is a free, simple, no-nonsense invoice generator that anyone can use without signing up. Everything beyond that is additive.
 
 ---

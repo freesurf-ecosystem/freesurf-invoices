@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "cnxt to invoices",
-    "slug": "cnxt-to-invoice-mobile",
+    "name": "FreeSurf Invoices",
+    "slug": "freesurf-invoices-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "cnxt-to-invoices",
+    "scheme": "freesurf-invoices",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,7 +16,7 @@
       "**/*"
     ],
     "android": {
-      "package": "to.cnxt.invoices",
+      "package": "tools.freesurf.invoices",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -24,7 +24,19 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "to.cnxt.invoices"
+      "bundleIdentifier": "tools.freesurf.invoices",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ]
+      }
     },
     "extra": {
       "eas": {
@@ -36,7 +48,7 @@
       [
         "@sentry/react-native",
         {
-          "organization": "cnxt-to",
+          "organization": "freesurf",
           "project": "react-native"
         }
       ]

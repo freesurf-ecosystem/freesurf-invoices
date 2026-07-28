@@ -1,13 +1,13 @@
 import { getSupabaseClient as getConfiguredSupabaseClient, isSupabaseConfigured } from "./supabase-client.js";
-import { getSharedSession, clearSharedSession } from "./cnxt-auth.js";
 
-// Restore cross-domain session from cookie into Supabase localStorage
-getSharedSession();
+// Optional: try to restore cross-domain session silently (non-blocking)
+import { getSharedSession, clearSharedSession } from "./freesurf-auth.js";
+getSharedSession().catch(() => {});
 
-const STORAGE_KEY = "cnxt-invoices-draft-v2";
-const INVOICE_SEQUENCE_KEY = "cnxt-invoices-next-sequence-v1";
-const POST_AUTH_RETURN_KEY = "cnxt-invoices-post-auth-return";
-const POST_AUTH_ACTION_KEY = "cnxt-invoices-post-auth-action";
+const STORAGE_KEY = "freesurf-invoices-draft-v2";
+const INVOICE_SEQUENCE_KEY = "freesurf-invoices-next-sequence-v1";
+const POST_AUTH_RETURN_KEY = "freesurf-invoices-post-auth-return";
+const POST_AUTH_ACTION_KEY = "freesurf-invoices-post-auth-action";
 
 const form = document.querySelector("#invoice-form");
 const lineItemsContainer = document.querySelector("#line-items");
@@ -1040,7 +1040,7 @@ async function exportInvoicePdfDirect() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(140, 135, 125);
-      doc.text("Free Invoice Maker | cnxt to invoices", margin, pageHeight - margin - 0.05);
+      doc.text("Free Invoice Maker | FreeSurf Invoices", margin, pageHeight - margin - 0.05);
       if (invoiceNumber) {
         doc.text(invoiceNumber, pageWidth - margin, pageHeight - margin - 0.05, { align: "right" });
       }
@@ -1463,7 +1463,7 @@ function renderPreview() {
   const clientEmail = state.clientEmail ? `<p>${escapeHtml(state.clientEmail)}</p>` : "";
   const invoiceFooterMarkup = `
     <div class="preview-footer">
-      <a class="preview-print-brand" href="https://invoices.cnxt.to/">Free Invoice Maker | cnxt to invoices</a>
+      <a class="preview-print-brand" href="https://invoices.freesurf.tools/">Free Invoice Maker | FreeSurf Invoices</a>
       ${invoiceNumber ? `<p class="preview-invoice-number">${invoiceNumber}</p>` : ""}
     </div>`;
   const notesMarkup = state.notes.trim().length > 0

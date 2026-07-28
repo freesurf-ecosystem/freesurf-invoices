@@ -1,8 +1,8 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabase-client.js";
 
-const STORAGE_KEY = "cnxt-invoices-draft-v2";
-const POST_AUTH_RETURN_KEY = "cnxt-invoices-post-auth-return";
-const POST_AUTH_ACTION_KEY = "cnxt-invoices-post-auth-action";
+const STORAGE_KEY = "freesurf-invoices-draft-v2";
+const POST_AUTH_RETURN_KEY = "freesurf-invoices-post-auth-return";
+const POST_AUTH_ACTION_KEY = "freesurf-invoices-post-auth-action";
 
 const workspaceKind = document.body.dataset.workspaceKind || "drafts";
 const subtitle = document.querySelector("#workspace-subtitle");

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Free Invoice Maker &mdash; No Account Required | cnxt to invoices</title>
-    <meta name="description" content="Create professional invoices for free. No subscription, no watermarks, no account required. Save drafts, export to PDF, and manage clients â€” all free." />
-    <meta property="og:title" content="Free Invoice Maker â€” No Account Required | cnxt to invoices" />
-    <meta property="og:description" content="Create professional invoices for free. No subscription, no watermarks, no account required. Save drafts, export to PDF, and manage clients â€” all free." />
-    <meta property="og:url" content="https://invoices.cnxt.to/" />
+    <title>Free Invoice Maker — No Account Required | FreeSurf Invoices</title>
+    <meta name="description" content="Create professional invoices for free. No subscription, no watermarks, no account required. Save drafts, export to PDF, and manage clients — all free." />
+    <meta property="og:title" content="Free Invoice Maker — No Account Required | FreeSurf Invoices" />
+    <meta property="og:description" content="Create professional invoices for free. No subscription, no watermarks, no account required." />
+    <meta property="og:url" content="https://invoices.freesurf.tools/" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Free Invoice Maker â€” No Account Required | cnxt to invoices" />
+    <meta name="twitter:title" content="Free Invoice Maker — No Account Required | FreeSurf Invoices" />
     <meta name="twitter:description" content="Create professional invoices for free. No subscription, no watermarks, no account required." />
     <link rel="stylesheet" href="./css/style.css?v=20260509h" />
     <link rel="icon" type="image/png" href="./public/logo-favicon.png" />
@@ -19,7 +19,7 @@
     <div class="page-shell">
       <header class="hero">
         <div class="hero-topbar">
-          <p class="eyebrow hero-brand"><img src="./public/logo-nav.png" alt="cnxt to invoices" class="nav-logo" /> cnxt to invoices</p>
+          <p class="eyebrow hero-brand"><img src="./public/logo-nav.png" alt="FreeSurf Invoices" class="nav-logo" /> FreeSurf Invoices</p>
           <div class="hero-actions">
             <button id="new-invoice-button" class="button" type="button">New invoice</button>
             <div class="menu-shell">
@@ -35,8 +35,7 @@
                 <a class="app-menu-item app-menu-link" href="./index.html">Create invoice</a>
                 <a class="app-menu-item app-menu-link" href="./drafts.html">Drafts</a>
                 <a class="app-menu-item app-menu-link" href="./invoices.html">Previous invoices</a>
-                <a id="menu-auth-link" class="app-menu-item app-menu-link" href="./auth.html">Sign in / Sign up</a>
-                <button id="menu-signout-button" class="app-menu-item app-menu-link hidden" type="button">Log out</button>
+                <span id="menu-auth-area" class="app-menu-item" style="color:#5f6b7a;font-size:0.8rem;padding:8px 12px;">All data saved in your browser</span>
               </div>
             </div>
           </div>
@@ -192,30 +191,37 @@
         </section>
       </main>
 
-      <footer class="site-footer">
-        <div class="site-footer-grid">
-          <div class="site-footer-brand">
-            <p class="eyebrow site-footer-eyebrow">cnxt to invoices</p>
-            <p class="site-footer-copy">A free invoice generator for fast, clean, print-ready invoices. Create invoices, save drafts, and export professional PDFs without a complicated setup.</p>
+      <!-- FreeSurf footer -->
+      <footer class="freesurf-footer">
+        <div class="freesurf-footer-inner">
+          <div class="freesurf-footer-brand">
+            <a href="https://freesurf.tools" class="freesurf-footer-logo">FreeSurf</a>
+            <p class="freesurf-footer-tagline">Free tools for freelancers & small businesses. No commissions, no lock-in, open source.</p>
           </div>
-          <div class="site-footer-links">
-            <p class="site-footer-heading">Invoice maker</p>
-            <a class="site-footer-link" href="./index.html">Create invoice</a>
-            <a class="site-footer-link" href="./drafts.html">Drafts</a>
-            <a class="site-footer-link" href="./invoices.html">Previous invoices</a>
-          </div>
-          <div class="site-footer-links">
-            <p class="site-footer-heading">Explore</p>
-            <a class="site-footer-link" href="https://links.cnxt.to/">Free linktr.ee alternative</a>
-          </div>
-          <div class="site-footer-links">
-            <p class="site-footer-heading">Legal</p>
-            <a class="site-footer-link" href="./privacy.html">Privacy policy</a>
-            <a class="site-footer-link" href="./terms.html">Terms</a>
+          <div class="freesurf-footer-links">
+            <div class="freesurf-footer-col">
+              <span class="freesurf-footer-heading">Tools</span>
+              <a href="https://invoices.freesurf.tools">Invoices</a>
+              <a href="https://links.freesurf.tools">Links</a>
+              <a href="https://post.freesurf.tools">Post</a>
+            </div>
+            <div class="freesurf-footer-col">
+              <span class="freesurf-footer-heading">Platform</span>
+              <a href="https://freesurf.tools">Home</a>
+              <a href="https://auth.freesurf.tools">Sign in</a>
+              <a href="https://github.com/freesurf-ecosystem">GitHub</a>
+            </div>
+            <div class="freesurf-footer-col">
+              <span class="freesurf-footer-heading">Legal</span>
+              <a href="https://freesurf.tools/privacy.html">Privacy</a>
+              <a href="https://freesurf.tools/terms.html">Terms</a>
+              <a href="mailto:hello@freesurf.tools">Contact</a>
+            </div>
           </div>
         </div>
-        <div class="site-footer-bottom">
-          <p class="site-footer-meta">&copy; 2026 cnxt to invoices. Free invoice generation for freelancers, founders, and small teams.</p>
+        <div class="freesurf-footer-bottom">
+          <span>&copy; <span class="freesurf-footer-year"></span> FreeSurf. Built for independent workers.</span>
+          <span>Part of the FreeSurf ecosystem of free tools.</span>
         </div>
       </footer>
     </div>
@@ -245,5 +251,6 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="module" src="./js/app.js?v=20260509h"></script>
+    <script>document.querySelector('.freesurf-footer-year').textContent = new Date().getFullYear();</script>
   </body>
 </html>

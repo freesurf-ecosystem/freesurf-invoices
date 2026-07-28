@@ -107,7 +107,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>cnxt to invoices</Text>
+        <Text style={styles.brand}>FreeSurf Invoices</Text>
         <Text style={styles.heading}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
 
         <View style={styles.tabs}>

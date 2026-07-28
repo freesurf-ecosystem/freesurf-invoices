@@ -14,7 +14,7 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
 
   return (
     <View style={styles.bar}>
-      <Text style={styles.brand}>cnxt to invoices</Text>
+      <Text style={styles.brand}>FreeSurf Invoices</Text>
       <Pressable style={styles.hamburger} onPress={() => setOpen(true)} accessibilityLabel="Open menu">
         <View style={styles.line} />
         <View style={styles.line} />
