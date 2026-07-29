@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import TopBar from "../components/TopBar";
@@ -51,41 +52,34 @@ export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices
 
   async function loadDrafts() {
     setLoading(true);
+    const allDrafts: Draft[] = [];
+
+    // Load local draft first
+    try {
+      const localJson = await AsyncStorage.getItem("freesurf_current_draft");
+      if (localJson) {
+        const payload = JSON.parse(localJson);
+        allDrafts.push({
+          id: "local",
+          draft_name: (payload.invoiceNumber || payload.clientName || "Unsaved invoice") as string,
+          updated_at: new Date().toISOString(),
+          payload_json: payload as Record<string, unknown>,
+        });
+      }
+    } catch { /* ignore */ }
+
+    // Load cloud drafts if logged in
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
-    if (!user) { setLoading(false); return; }
-
-    const { data: rawDrafts } = await supabase
-      .from("invoice_drafts")
-      .select("id, draft_name, updated_at, payload_json")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
-
-    const allDrafts = (rawDrafts as Draft[]) || [];
-
-    // Auto-prune: remove drafts whose invoice number already has a saved invoice row
-    const invoiceNumbers = allDrafts
-      .map((d) => d.payload_json?.invoiceNumber as string | undefined)
-      .filter(Boolean) as string[];
-
-    if (invoiceNumbers.length > 0) {
-      const { data: savedInvoices } = await supabase
-        .from("invoices")
-        .select("invoice_number")
+    if (user) {
+      const { data: rawDrafts } = await supabase
+        .from("invoice_drafts")
+        .select("id, draft_name, updated_at, payload_json")
         .eq("user_id", user.id)
-        .in("invoice_number", invoiceNumbers);
+        .order("updated_at", { ascending: false });
 
-      const savedNumbers = new Set((savedInvoices || []).map((i: { invoice_number: string | null }) => i.invoice_number));
-      const staleIds = allDrafts
-        .filter((d) => savedNumbers.has(d.payload_json?.invoiceNumber as string))
-        .map((d) => d.id);
-
-      if (staleIds.length > 0) {
-        await supabase.from("invoice_drafts").delete().in("id", staleIds);
-        setDrafts(allDrafts.filter((d) => !staleIds.includes(d.id)));
-        setLoading(false);
-        return;
-      }
+      const cloudDrafts = (rawDrafts as Draft[]) || [];
+      allDrafts.push(...cloudDrafts);
     }
 
     setDrafts(allDrafts);
@@ -93,7 +87,11 @@ export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices
   }
 
   async function deleteDraft(id: string) {
-    await supabase.from("invoice_drafts").delete().eq("id", id);
+    if (id === "local") {
+      await AsyncStorage.removeItem("freesurf_current_draft");
+    } else {
+      await supabase.from("invoice_drafts").delete().eq("id", id);
+    }
     setDrafts((prev) => prev.filter((d) => d.id !== id));
   }
 

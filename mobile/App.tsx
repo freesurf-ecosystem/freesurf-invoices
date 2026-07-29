@@ -111,6 +111,14 @@ function App() {
                 />
               )}
           </Stack.Screen>
+          <Stack.Screen
+            name="Auth"
+            options={{ headerShown: false }}
+          >
+              {(props) => (
+                <AuthScreen onAuthenticated={() => setSession(true)} />
+              )}
+          </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
