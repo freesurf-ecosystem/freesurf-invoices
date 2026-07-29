@@ -116,7 +116,7 @@ function App() {
             options={{ headerShown: false }}
           >
               {(props) => (
-                <AuthScreen onAuthenticated={() => setSession(true)} />
+                <AuthScreen onAuthenticated={() => { setSession(true); props.navigation.navigate("CreateInvoice"); }} />
               )}
           </Stack.Screen>
         </Stack.Navigator>

@@ -10,7 +10,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { Eye, EyeOff } from "lucide-react-native";
@@ -23,7 +22,6 @@ type Props = {
 };
 
 export default function AuthScreen({ onAuthenticated }: Props) {
-  const navigation = useNavigation<any>();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +48,6 @@ export default function AuthScreen({ onAuthenticated }: Props) {
       console.log("[Auth] Sign in success, user:", data.user?.id);
       setLoading(false);
       onAuthenticated();
-      navigation.goBack();
     } catch (e: any) {
       console.log("[Auth] Sign in exception:", e?.message || String(e));
       setMessage({ text: e?.message || "Connection failed. Check your network.", kind: "error" });
@@ -79,7 +76,6 @@ export default function AuthScreen({ onAuthenticated }: Props) {
       }
       if (data.session?.user) {
         onAuthenticated();
-        navigation.goBack();
         return;
       }
       setMessage({ text: "Check your email to confirm your account.", kind: "success" });
