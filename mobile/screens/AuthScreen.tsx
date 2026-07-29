@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { Eye, EyeOff } from "lucide-react-native";
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export default function AuthScreen({ onAuthenticated }: Props) {
+  const navigation = useNavigation<any>();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,13 +38,24 @@ export default function AuthScreen({ onAuthenticated }: Props) {
     if (!email.trim() || !password) return;
     setLoading(true);
     setMessage(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setLoading(false);
-    if (error) {
-      setMessage({ text: error.message, kind: "error" });
-      return;
+    try {
+      console.log("[Auth] Attempting sign in:", email.trim());
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        console.log("[Auth] Sign in error:", error.message);
+        setMessage({ text: error.message, kind: "error" });
+        setLoading(false);
+        return;
+      }
+      console.log("[Auth] Sign in success, user:", data.user?.id);
+      setLoading(false);
+      onAuthenticated();
+      navigation.goBack();
+    } catch (e: any) {
+      console.log("[Auth] Sign in exception:", e?.message || String(e));
+      setMessage({ text: e?.message || "Connection failed. Check your network.", kind: "error" });
+      setLoading(false);
     }
-    onAuthenticated();
   }
 
   async function handleSignUp() {
@@ -57,17 +70,23 @@ export default function AuthScreen({ onAuthenticated }: Props) {
     }
     setLoading(true);
     setMessage(null);
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    try {
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+      if (error) {
+        setMessage({ text: error.message, kind: "error" });
+        setLoading(false);
+        return;
+      }
+      if (data.session?.user) {
+        onAuthenticated();
+        navigation.goBack();
+        return;
+      }
+      setMessage({ text: "Check your email to confirm your account.", kind: "success" });
+    } catch (e: any) {
+      setMessage({ text: e?.message || "Connection failed.", kind: "error" });
+    }
     setLoading(false);
-    if (error) {
-      setMessage({ text: error.message, kind: "error" });
-      return;
-    }
-    if (data.session?.user) {
-      onAuthenticated();
-      return;
-    }
-    setMessage({ text: "Check your email to confirm your account.", kind: "success" });
   }
 
   async function handleGoogleSignIn() {
