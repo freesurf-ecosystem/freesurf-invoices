@@ -47,7 +47,7 @@ export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices
   useFocusEffect(
     useCallback(() => {
       loadDrafts();
-    }, [])
+    }, [isLoggedIn])
   );
 
   async function loadDrafts() {

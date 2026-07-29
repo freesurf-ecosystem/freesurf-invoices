@@ -61,7 +61,7 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
   useFocusEffect(
     useCallback(() => {
       loadInvoices();
-    }, [])
+    }, [isLoggedIn])
   );
 
   async function loadInvoices() {
