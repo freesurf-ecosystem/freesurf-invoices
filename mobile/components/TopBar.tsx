@@ -6,10 +6,12 @@ type Props = {
   onNewInvoice?: () => void;
   onDrafts: () => void;
   onInvoices: () => void;
+  onSignIn: () => void;
   onSignOut: () => void;
+  isLoggedIn: boolean;
 };
 
-export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoices, onSignOut }: Props) {
+export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoices, onSignIn, onSignOut, isLoggedIn }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -36,9 +38,15 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
               <Text style={[styles.label, activeScreen === "invoices" && styles.active]}>Previous invoices</Text>
             </Pressable>
             <View style={styles.divider} />
-            <Pressable style={styles.item} onPress={() => { setOpen(false); onSignOut(); }}>
-              <Text style={styles.signOut}>Log out</Text>
-            </Pressable>
+            {isLoggedIn ? (
+              <Pressable style={styles.item} onPress={() => { setOpen(false); onSignOut(); }}>
+                <Text style={styles.signOut}>Log out</Text>
+              </Pressable>
+            ) : (
+              <Pressable style={styles.item} onPress={() => { setOpen(false); onSignIn(); }}>
+                <Text style={styles.label}>Sign in</Text>
+              </Pressable>
+            )}
           </View>
         </Pressable>
       </Modal>

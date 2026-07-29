@@ -65,45 +65,51 @@ function App() {
             name="CreateInvoice"
             options={{ headerShown: false }}
           >
-            {(props) => {
-              const params = props.route.params;
-              return (
-                <CreateInvoiceScreen
-                  onSignOut={() => setSession(false)}
-                  onViewDrafts={() => props.navigation.navigate("Drafts")}
-                  onViewInvoices={() => props.navigation.navigate("Invoices")}
-                  loadDraftId={params?.draftId}
-                  loadDraftPayload={params?.draftPayload}
-                  loadInvoiceId={params?.invoiceId}
-                />
-              );
-            }}
+              {(props) => {
+                const params = props.route.params;
+                return (
+                  <CreateInvoiceScreen
+                    isLoggedIn={Boolean(session)}
+                    onSignIn={() => props.navigation.navigate("Auth")}
+                    onSignOut={() => setSession(false)}
+                    onViewDrafts={() => props.navigation.navigate("Drafts")}
+                    onViewInvoices={() => props.navigation.navigate("Invoices")}
+                    loadDraftId={params?.draftId}
+                    loadDraftPayload={params?.draftPayload}
+                    loadInvoiceId={params?.invoiceId}
+                  />
+                );
+              }}
           </Stack.Screen>
           <Stack.Screen
             name="Drafts"
             options={{ headerShown: false }}
           >
-            {(props) => (
-              <DraftsScreen
-                onOpenDraft={(draft) => props.navigation.navigate("CreateInvoice", { draftId: draft.id, draftPayload: draft.payload_json })}
-                onNewInvoice={() => props.navigation.navigate("CreateInvoice")}
-                onViewInvoices={() => props.navigation.navigate("Invoices")}
-                onSignOut={() => setSession(false)}
-              />
-            )}
+              {(props) => (
+                <DraftsScreen
+                  onOpenDraft={(draft) => props.navigation.navigate("CreateInvoice", { draftId: draft.id, draftPayload: draft.payload_json })}
+                  onNewInvoice={() => props.navigation.navigate("CreateInvoice")}
+                  onViewInvoices={() => props.navigation.navigate("Invoices")}
+                  onSignIn={() => props.navigation.navigate("Auth")}
+                  onSignOut={() => setSession(false)}
+                  isLoggedIn={Boolean(session)}
+                />
+              )}
           </Stack.Screen>
           <Stack.Screen
             name="Invoices"
             options={{ headerShown: false }}
           >
-            {(props) => (
-              <InvoicesScreen
-                onNewInvoice={() => props.navigation.navigate("CreateInvoice")}
-                onDrafts={() => props.navigation.navigate("Drafts")}
-                onSignOut={() => setSession(false)}
-                onEditInvoice={(id) => props.navigation.navigate("CreateInvoice", { invoiceId: id })}
-              />
-            )}
+              {(props) => (
+                <InvoicesScreen
+                  onNewInvoice={() => props.navigation.navigate("CreateInvoice")}
+                  onDrafts={() => props.navigation.navigate("Drafts")}
+                  onSignIn={() => props.navigation.navigate("Auth")}
+                  onSignOut={() => setSession(false)}
+                  isLoggedIn={Boolean(session)}
+                  onEditInvoice={(id) => props.navigation.navigate("CreateInvoice", { invoiceId: id })}
+                />
+              )}
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>

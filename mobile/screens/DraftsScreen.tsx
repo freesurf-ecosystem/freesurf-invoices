@@ -22,7 +22,9 @@ type Props = {
   onOpenDraft: (draft: Draft) => void;
   onNewInvoice: () => void;
   onViewInvoices: () => void;
+  onSignIn: () => void;
   onSignOut: () => void;
+  isLoggedIn: boolean;
 };
 
 function formatDate(value: string | null) {
@@ -37,7 +39,7 @@ function draftTotal(payload: Record<string, unknown>): string {
   return total > 0 ? `$${total.toFixed(2)}` : "";
 }
 
-export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices, onSignOut }: Props) {
+export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices, onSignIn, onSignOut, isLoggedIn }: Props) {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -111,7 +113,9 @@ export default function DraftsScreen({ onOpenDraft, onNewInvoice, onViewInvoices
           onNewInvoice={onNewInvoice}
           onDrafts={() => {}}
           onInvoices={onViewInvoices}
+          onSignIn={onSignIn}
           onSignOut={onSignOut}
+          isLoggedIn={isLoggedIn}
         />
       </View>
       <Text style={styles.heading}>Saved drafts</Text>

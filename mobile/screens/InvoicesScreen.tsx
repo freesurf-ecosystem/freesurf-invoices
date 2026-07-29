@@ -25,8 +25,10 @@ type Invoice = {
 type Props = {
   onNewInvoice: () => void;
   onDrafts: () => void;
+  onSignIn: () => void;
   onSignOut: () => void;
   onEditInvoice: (id: string) => void;
+  isLoggedIn: boolean;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -51,7 +53,7 @@ function formatMoney(cents: number | null, currency: string | null) {
   return `${sym}${((cents || 0) / 100).toFixed(2)}`;
 }
 
-export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignOut, onEditInvoice }: Props) {
+export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSignOut, onEditInvoice, isLoggedIn }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -113,7 +115,9 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignOut, onEd
           onNewInvoice={onNewInvoice}
           onDrafts={onDrafts}
           onInvoices={() => {}}
+          onSignIn={onSignIn}
           onSignOut={onSignOut}
+          isLoggedIn={isLoggedIn}
         />
       </View>
       <Text style={styles.heading}>Previous invoices</Text>

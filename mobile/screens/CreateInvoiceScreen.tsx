@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
@@ -21,11 +23,13 @@ type LineItem = { description: string; quantity: string; rate: string };
 
 type Props = {
   onSignOut: () => void;
+  onSignIn?: () => void;
   onViewDrafts?: () => void;
   onViewInvoices?: () => void;
   loadDraftId?: string;
   loadDraftPayload?: Record<string, unknown>;
   loadInvoiceId?: string;
+  isLoggedIn?: boolean;
 };
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD"] as const;
@@ -52,7 +56,14 @@ function todayIso() {
   return `${y}-${m}-${dd}`;
 }
 
-export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInvoices, loadDraftId, loadDraftPayload, loadInvoiceId }: Props) {
+function formatPhone(text: string): string {
+  const digits = text.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts, onViewInvoices, loadDraftId, loadDraftPayload, loadInvoiceId, isLoggedIn }: Props) {
   const [businessName, setBusinessName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
@@ -77,10 +88,13 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
   const [invoiceRecordId, setInvoiceRecordId] = useState<string | null>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localProfileSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    loadLocalProfile();
     loadProfile();
     if (!loadDraftPayload && !loadInvoiceId) {
+      loadLocalDraft();
       loadNextInvoiceNumber();
     }
   }, []);
@@ -122,6 +136,53 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
         rate: String(i.rate || ""),
       })));
     }
+  }
+
+  async function loadLocalProfile() {
+    try {
+      const json = await AsyncStorage.getItem("freesurf_business_profile");
+      if (json) {
+        const p = JSON.parse(json);
+        if (p.businessName) setBusinessName(p.businessName);
+        if (p.businessEmail) setBusinessEmail(p.businessEmail);
+        if (p.businessPhone) setBusinessPhone(p.businessPhone);
+        if (p.businessWebsite) setBusinessWebsite(p.businessWebsite);
+        if (p.businessAddress) setBusinessAddress(p.businessAddress);
+        if (p.logoUrl) setLogoUrl(p.logoUrl);
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function saveLocalProfile() {
+    try {
+      await AsyncStorage.setItem("freesurf_business_profile", JSON.stringify({
+        businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
+      }));
+    } catch { /* ignore */ }
+  }
+
+  async function saveLocalDraft() {
+    try {
+      const payload = {
+        businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
+        clientName, clientEmail, clientAddress,
+        invoiceNumber, issueDate, dueDate, currency, taxRate, discount, notes,
+        items: items.map((i) => ({ description: i.description, quantity: parseFloat(i.quantity) || 1, rate: parseFloat(i.rate) || 0 })),
+      };
+      await AsyncStorage.setItem("freesurf_current_draft", JSON.stringify(payload));
+    } catch { /* ignore */ }
+  }
+
+  async function loadLocalDraft() {
+    try {
+      const json = await AsyncStorage.getItem("freesurf_current_draft");
+      if (json) {
+        const p = JSON.parse(json);
+        loadFromPayload(p);
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
   }
 
   async function loadProfile() {
@@ -325,6 +386,11 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
     profileSaveTimer.current = setTimeout(() => saveProfileSilently(), 3000);
   }
 
+  function scheduleLocalProfileSave() {
+    if (localProfileSaveTimer.current) clearTimeout(localProfileSaveTimer.current);
+    localProfileSaveTimer.current = setTimeout(() => saveLocalProfile(), 2000);
+  }
+
   async function saveProfileSilently(): Promise<string | null> {
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
@@ -360,9 +426,16 @@ export default function CreateInvoiceScreen({ onSignOut, onViewDrafts, onViewInv
   }
 
   async function saveDraft(silent = false) {
+    await saveLocalDraft();
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
-    if (!user) return;
+    if (!user) {
+      if (!silent) {
+        setStatus("Draft saved locally.");
+        setTimeout(() => setStatus(""), 3000);
+      }
+      return;
+    }
 
     const payload = {
       businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
@@ -648,8 +721,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
     setCurrency("USD"); setTaxRate(""); setDiscount("");
     setNotes(""); setItems([defaultItem()]); setStatus("");
     setCurrentDraftId(null); setInvoiceRecordId(null);
-    // Business fields (name, email, phone, website, address, logo) are intentionally
-    // preserved so the user doesn't have to re-enter them for each invoice.
+    AsyncStorage.removeItem("freesurf_current_draft").catch(() => {});
     loadNextInvoiceNumber();
   }
 
@@ -661,7 +733,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-      <TopBar activeScreen="invoice" onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignOut={handleSignOut} />
+      <TopBar activeScreen="invoice" onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignIn={onSignIn ?? (() => {})} onSignOut={handleSignOut} isLoggedIn={isLoggedIn ?? false} />
 
       {userEmail ? <Text style={styles.userEmail}>{userEmail}</Text> : null}
       {status ? <Text style={styles.autoSaveStatus}>{status}</Text> : null}
@@ -671,11 +743,11 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       </Pressable>
 
       <Text style={styles.sectionTitle}>Your business</Text>
-      <TextInput style={styles.input} placeholder="Business name" placeholderTextColor="#9a8f87" value={businessName} onChangeText={(v) => { setBusinessName(v); scheduleAutoSave(); scheduleProfileSave(); }} />
-      <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9a8f87" keyboardType="email-address" autoCapitalize="none" value={businessEmail} onChangeText={(v) => { setBusinessEmail(v); scheduleAutoSave(); scheduleProfileSave(); }} />
-      <TextInput style={styles.input} placeholder="Phone" placeholderTextColor="#9a8f87" keyboardType="phone-pad" value={businessPhone} onChangeText={(v) => { setBusinessPhone(v); scheduleAutoSave(); scheduleProfileSave(); }} />
-      <TextInput style={styles.input} placeholder="Website" placeholderTextColor="#9a8f87" autoCapitalize="none" keyboardType="url" value={businessWebsite} onChangeText={(v) => { setBusinessWebsite(v); scheduleAutoSave(); scheduleProfileSave(); }} />
-      <TextInput style={[styles.input, styles.textarea]} placeholder="Address" placeholderTextColor="#9a8f87" multiline value={businessAddress} onChangeText={(v) => { setBusinessAddress(v); scheduleAutoSave(); scheduleProfileSave(); }} />
+      <TextInput style={styles.input} placeholder="Business name" placeholderTextColor="#9a8f87" value={businessName} onChangeText={(v) => { setBusinessName(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
+      <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9a8f87" keyboardType="email-address" autoCapitalize="none" value={businessEmail} onChangeText={(v) => { setBusinessEmail(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
+      <TextInput style={styles.input} placeholder="Phone (555-555-5555)" placeholderTextColor="#9a8f87" keyboardType="phone-pad" value={businessPhone} onChangeText={(v) => { setBusinessPhone(formatPhone(v)); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} maxLength={12} />
+      <TextInput style={styles.input} placeholder="Website" placeholderTextColor="#9a8f87" autoCapitalize="none" keyboardType="url" value={businessWebsite} onChangeText={(v) => { setBusinessWebsite(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
+      <TextInput style={[styles.input, styles.textarea]} placeholder="Address" placeholderTextColor="#9a8f87" multiline value={businessAddress} onChangeText={(v) => { setBusinessAddress(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
       <Pressable style={styles.chooseLogoBtn} onPress={pickLogo}>
         <Text style={styles.chooseLogoBtnLabel}>{logoUrl ? "Change logo" : "Choose logo"}</Text>
       </Pressable>
@@ -803,9 +875,21 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
           <Text style={styles.previewBrand}>Free Invoice Maker | FreeSurf Invoices</Text>
       </View>
 
+      <Pressable style={styles.saveButton} onPress={() => saveDraft(false)}>
+        <Text style={styles.saveButtonLabel}>Save invoice</Text>
+      </Pressable>
+
       <Pressable style={styles.button} onPress={downloadInvoice} disabled={exporting}>
         {exporting ? <ActivityIndicator color="#fffdf8" /> : <Text style={styles.buttonLabel}>Download invoice</Text>}
       </Pressable>
+
+      <View style={styles.legalLinks}>
+        <Text style={styles.legalText}>
+          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://freesurf.tools/privacy.html")}>Privacy Policy</Text>
+          {" · "}
+          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://freesurf.tools/terms.html")}>Terms of Service</Text>
+        </Text>
+      </View>
 
       <View style={styles.spacer} />
     </ScrollView>
@@ -848,6 +932,11 @@ const styles = StyleSheet.create({
   totalAmount: { fontSize: 18, fontWeight: "700", color: "#0d6b61" },
   button: { backgroundColor: "#0d6b61", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginTop: 8 },
   buttonLabel: { color: "#fffdf8", fontSize: 16, fontWeight: "700" },
+  saveButton: { backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#0d6b61", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 8 },
+  saveButtonLabel: { color: "#0d6b61", fontSize: 16, fontWeight: "700" },
+  legalLinks: { alignItems: "center", marginTop: 20, paddingBottom: 8 },
+  legalText: { fontSize: 12, color: "#9a8f87" },
+  legalLink: { color: "#0d6b61", textDecorationLine: "underline" },
   spacer: { height: 40 },
   logoPreview: { width: 120, height: 40 },
   logoRow: { flexDirection: "row", alignItems: "center", gap: 12 },

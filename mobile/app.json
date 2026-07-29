@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "FreeSurf Invoices",
-    "slug": "freesurf-invoices-mobile",
+    "slug": "cnxt-to-invoice-mobile",
+    "owner": "freesurf",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
