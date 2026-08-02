@@ -39,7 +39,7 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
           <View style={styles.menu}>
             {onNewInvoice && (
               <Pressable style={styles.item} onPress={() => { setOpen(false); onNewInvoice(); }}>
-                <Text style={[styles.label, activeScreen === "invoice" && styles.active]}>Create invoice</Text>
+                <Text style={[styles.label, activeScreen === "invoice" && styles.active]}>Invoice Editor</Text>
               </Pressable>
             )}
             <Pressable style={styles.item} onPress={() => { setOpen(false); onDrafts(); }}>

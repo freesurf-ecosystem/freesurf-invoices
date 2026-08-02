@@ -806,7 +806,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
   return (
     <View style={styles.root}>
       <View style={styles.topbarWrap}>
-        <TopBar activeScreen="invoice" onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignIn={onSignIn ?? (() => {})} onSignOut={handleSignOut} isLoggedIn={isLoggedIn ?? false} />
+        <TopBar activeScreen="invoice" onNewInvoice={() => {}} onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignIn={onSignIn ?? (() => {})} onSignOut={handleSignOut} isLoggedIn={isLoggedIn ?? false} />
       </View>
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
