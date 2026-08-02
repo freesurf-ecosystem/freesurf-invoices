@@ -11,6 +11,7 @@ Sentry.init({
   enabled: !__DEV__,
 });
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import AuthScreen from "./screens/AuthScreen";
 import DraftsScreen from "./screens/DraftsScreen";
 import CreateInvoiceScreen from "./screens/CreateInvoiceScreen";
@@ -39,6 +40,10 @@ function App() {
       setSession(Boolean(s));
     });
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    requestTrackingPermissionsAsync().catch(() => {});
   }, []);
 
   if (!initialized) {
