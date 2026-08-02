@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   activeScreen: "invoice" | "drafts" | "invoices";
@@ -13,6 +13,17 @@ type Props = {
 
 export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoices, onSignIn, onSignOut, isLoggedIn }: Props) {
   const [open, setOpen] = useState(false);
+
+  function handleDeleteAccount() {
+    Alert.alert(
+      "Delete account",
+      "This will permanently delete your FreeSurf account and all synced data. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => Linking.openURL("mailto:support@freesurf.tools?subject=Account%20deletion%20request") },
+      ]
+    );
+  }
 
   return (
     <View style={styles.bar}>
@@ -47,6 +58,21 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
                 <Text style={styles.label}>Sign in</Text>
               </Pressable>
             )}
+            <View style={styles.divider} />
+            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/privacy"); }}>
+              <Text style={styles.mutedLabel}>Privacy Policy</Text>
+            </Pressable>
+            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/terms"); }}>
+              <Text style={styles.mutedLabel}>Terms of Service</Text>
+            </Pressable>
+            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("mailto:support@freesurf.tools"); }}>
+              <Text style={styles.mutedLabel}>Support</Text>
+            </Pressable>
+            {isLoggedIn && (
+              <Pressable style={styles.item} onPress={handleDeleteAccount}>
+                <Text style={styles.deleteLabel}>Delete account</Text>
+              </Pressable>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -61,24 +87,18 @@ const styles = StyleSheet.create({
   line: { width: 22, height: 2, backgroundColor: "#1f1a17", borderRadius: 2 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.25)" },
   menu: {
-    position: "absolute",
-    top: 52,
-    right: 20,
-    backgroundColor: "#fffdf8",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#d8cfc3",
-    paddingVertical: 6,
-    minWidth: 210,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 8,
+    position: "absolute", top: 52, right: 20,
+    backgroundColor: "#fffdf8", borderRadius: 14,
+    borderWidth: 1, borderColor: "#d8cfc3",
+    paddingVertical: 6, minWidth: 210,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12, shadowRadius: 12, elevation: 8,
   },
   item: { paddingHorizontal: 20, paddingVertical: 13 },
   label: { fontSize: 15, color: "#1f1a17" },
+  mutedLabel: { fontSize: 14, color: "#675f58" },
   active: { color: "#0d6b61", fontWeight: "700" },
   divider: { height: 1, backgroundColor: "#e8e0d6", marginVertical: 4 },
   signOut: { fontSize: 15, color: "#675f58" },
+  deleteLabel: { fontSize: 14, color: "#c0392b" },
 });
