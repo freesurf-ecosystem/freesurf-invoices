@@ -26,6 +26,7 @@
     },
     "ios": {
       "bundleIdentifier": "tools.freesurf.invoices",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSUserTrackingUsageDescription": "Your device identifier is used to serve personalized ads and keep FreeSurf free."
