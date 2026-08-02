@@ -174,6 +174,39 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     } catch { /* ignore */ }
   }
 
+  async function saveLocalInvoice(totalCents: number) {
+    try {
+      const existingJson = await AsyncStorage.getItem("freesurf_local_invoices");
+      const existing: Array<{
+        id: string;
+        invoice_number: string;
+        issue_date: string;
+        currency: string;
+        total_cents: number;
+        status: string;
+        client_name: string;
+        created_at: string;
+      }> = existingJson ? JSON.parse(existingJson) : [];
+
+      const localInvoice = {
+        id: `local_${Date.now()}`,
+        invoice_number: invoiceNumber,
+        issue_date: issueDate,
+        currency,
+        total_cents: totalCents,
+        status: "sent",
+        client_name: clientName || null,
+        created_at: new Date().toISOString(),
+      };
+
+      // Deduplicate: replace existing local invoice with same number
+      const filtered = existing.filter((inv) => inv.invoice_number !== invoiceNumber);
+      filtered.unshift(localInvoice);
+
+      await AsyncStorage.setItem("freesurf_local_invoices", JSON.stringify(filtered.slice(0, 50)));
+    } catch { /* ignore */ }
+  }
+
   async function loadLocalDraft() {
     try {
       const json = await AsyncStorage.getItem("freesurf_current_draft");
@@ -234,29 +267,42 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
   }
 
   async function loadInvoiceRecord(id: string) {
-    const { data } = await supabase
-      .from("invoices")
-      .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email, address_line_1), invoice_items(description, quantity, unit_price_cents)")
-      .eq("id", id)
-      .single();
-    if (!data) return;
-    setInvoiceRecordId(id);
-    if (data.invoice_number) setInvoiceNumber(data.invoice_number);
-    if (data.issue_date) setIssueDate(data.issue_date);
-    if (data.due_date) setDueDate(data.due_date as string);
-    if (data.currency && (CURRENCIES as readonly string[]).includes(data.currency)) setCurrency(data.currency as Currency);
-    if (data.notes) setNotes(data.notes);
-    const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null; address_line_1: string | null } | null;
-    if (client?.client_name) setClientName(client.client_name);
-    if (client?.email) setClientEmail(client.email);
-    if (client?.address_line_1) setClientAddress(client.address_line_1);
-    const rawItems = Array.isArray(data.invoice_items) ? data.invoice_items : [];
-    if (rawItems.length > 0) {
-      setItems(rawItems.map((i: { description: string | null; quantity: number | null; unit_price_cents: number | null }) => ({
-        description: i.description || "",
-        quantity: String(i.quantity || 1),
-        rate: String(((i.unit_price_cents || 0) / 100).toFixed(2)),
-      })));
+    setStatus("Loading invoice...");
+    try {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email, address_line_1), invoice_items(description, quantity, unit_price_cents)")
+        .eq("id", id)
+        .single();
+      if (error || !data) {
+        setStatus("Could not load invoice. " + (error?.message || "Not found."));
+        setTimeout(() => setStatus(""), 5000);
+        return;
+      }
+      setInvoiceRecordId(id);
+      setCurrentDraftId(null);
+      if (data.invoice_number) setInvoiceNumber(data.invoice_number);
+      if (data.issue_date) setIssueDate(data.issue_date);
+      if (data.due_date) setDueDate(data.due_date as string);
+      if (data.currency && (CURRENCIES as readonly string[]).includes(data.currency)) setCurrency(data.currency as Currency);
+      if (data.notes) setNotes(data.notes);
+      const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null; address_line_1: string | null } | null;
+      if (client?.client_name) { setClientName(client.client_name); } else { setClientName(""); }
+      if (client?.email) { setClientEmail(client.email); } else { setClientEmail(""); }
+      if (client?.address_line_1) { setClientAddress(client.address_line_1); } else { setClientAddress(""); }
+      const rawItems = Array.isArray(data.invoice_items) ? data.invoice_items : [];
+      if (rawItems.length > 0) {
+        setItems(rawItems.map((i: { description: string | null; quantity: number | null; unit_price_cents: number | null }) => ({
+          description: i.description || "",
+          quantity: String(i.quantity || 1),
+          rate: String(((i.unit_price_cents || 0) / 100)),
+        })));
+      }
+      setStatus("");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setStatus("Could not load invoice: " + msg);
+      setTimeout(() => setStatus(""), 5000);
     }
   }
 
@@ -324,20 +370,18 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
   async function buildLogoDataUri(): Promise<string> {
     if (!logoUrl) return "";
     try {
+      if (logoUrl.startsWith("data:")) return logoUrl;
       let localPath = logoUrl;
       if (logoUrl.startsWith("http")) {
-        // Download remote URL to a temp file first — PDF renderer has no network access
         const tempPath = (FileSystem.cacheDirectory ?? "") + "logo_pdf_tmp";
         const { uri: downloaded } = await FileSystem.downloadAsync(logoUrl, tempPath);
         localPath = downloaded;
       }
       const b64 = await FileSystem.readAsStringAsync(localPath, { encoding: "base64" });
-      // Detect MIME from original URL (temp file has no extension after downloadAsync)
       const srcUrl = logoUrl.split("?")[0].toLowerCase();
       const mime = srcUrl.endsWith(".png") ? "image/png" : srcUrl.endsWith(".gif") ? "image/gif" : "image/jpeg";
       return `data:${mime};base64,${b64}`;
     } catch (e) {
-      // Propagate so downloadInvoice can surface the error
       Sentry.captureException(e, { tags: { location: "buildLogoDataUri" } });
       throw new Error("Logo encode failed: " + (e instanceof Error ? e.message : String(e)));
     }
@@ -431,10 +475,6 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
     if (!user) {
-      if (!silent) {
-        setStatus("Draft saved locally.");
-        setTimeout(() => setStatus(""), 3000);
-      }
       return;
     }
 
@@ -453,6 +493,21 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
 
     if (currentDraftId) {
       await supabase.from("invoice_drafts").update({ draft_name: draftName, payload_json: payload }).eq("id", currentDraftId);
+    } else if (invoiceNumber) {
+      // Invoice number is the identity tag — find and update existing draft, or insert new
+      const { data: existingDrafts } = await supabase
+        .from("invoice_drafts")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("draft_name", invoiceNumber)
+        .limit(1);
+      if (existingDrafts && existingDrafts.length > 0) {
+        setCurrentDraftId(existingDrafts[0].id);
+        await supabase.from("invoice_drafts").update({ draft_name: draftName, payload_json: payload }).eq("id", existingDrafts[0].id);
+      } else {
+        const { data } = await supabase.from("invoice_drafts").insert({ user_id: user.id, draft_name: draftName, payload_json: payload }).select("id").single();
+        if (data?.id) setCurrentDraftId(data.id);
+      }
     } else {
       const { data } = await supabase.from("invoice_drafts").insert({ user_id: user.id, draft_name: draftName, payload_json: payload }).select("id").single();
       if (data?.id) setCurrentDraftId(data.id);
@@ -461,8 +516,8 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     // Silently persist business profile on every save (same robust path as saveProfileSilently)
     await saveProfileSilently();
 
-    setStatus(silent ? "Auto-saved." : "Draft saved.");
-    setTimeout(() => setStatus(""), 3000);
+    // Clear local draft now that it's synced to the cloud
+    await AsyncStorage.removeItem("freesurf_current_draft").catch(() => {});
   }
 
   async function buildInvoiceHtml(): Promise<string> {
@@ -472,9 +527,15 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
       const lt = (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
       return `<tr><td>${item.description || "—"}</td><td style="text-align:center">${item.quantity}</td><td style="text-align:right">${sym}${parseFloat(item.rate || "0").toFixed(2)}</td><td style="text-align:right">${sym}${lt.toFixed(2)}</td></tr>`;
     }).join("");
-    const resolvedLogo = await buildLogoDataUri();
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>
-body{font-family:-apple-system,sans-serif;color:#1f1a17;padding:40px;max-width:680px;margin:0 auto}
+
+    let resolvedLogo = "";
+    try {
+      resolvedLogo = await buildLogoDataUri();
+    } catch (e) {
+      console.log("Logo skipped for PDF:", e instanceof Error ? e.message : String(e));
+    }
+
+    const css = `body{font-family:-apple-system,sans-serif;color:#1f1a17;padding:40px;max-width:680px;margin:0 auto}
 .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px}
 h1{font-size:28px;margin:0 0 4px}.meta{color:#675f58;font-size:13px;margin:2px 0}
 .parties{display:flex;gap:40px;margin-bottom:32px}
@@ -487,8 +548,9 @@ td{padding:8px 0;border-bottom:1px solid #e8e0d6;font-size:14px}
 .totals td{padding:4px 0;font-size:14px;border:none}.totals td:last-child{text-align:right}
 .totals .grand td{font-weight:700;font-size:16px;border-top:2px solid #1f1a17;padding-top:8px}
 .notes{margin-top:32px;font-size:13px;color:#675f58;white-space:pre-line}
-.footer{margin-top:48px;border-top:1px solid #e8e0d6;padding-top:12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8f87;text-align:center}
-</style></head><body>
+.footer{margin-top:48px;border-top:1px solid #e8e0d6;padding-top:12px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8f87;text-align:center}`;
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>${css}</style></head><body>
 <div class="header"><div><h1>Invoice</h1>${invoiceNumber ? `<p class="meta">${invoiceNumber}</p>` : ""}</div>
 <div style="text-align:right">${issueDate ? `<p class="meta">Issued: ${issueDate}</p>` : ""}${dueDate ? `<p class="meta">Due: ${dueDate}</p>` : ""}</div></div>
 <div class="parties">
@@ -630,56 +692,46 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
 
   async function downloadInvoice() {
     setExporting(true);
-    try {
-      await saveDraft(true);
+    // Cancel any pending auto-save to prevent race conditions
+    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null; }
+    if (profileSaveTimer.current) { clearTimeout(profileSaveTimer.current); profileSaveTimer.current = null; }
+    if (localProfileSaveTimer.current) { clearTimeout(localProfileSaveTimer.current); localProfileSaveTimer.current = null; }
 
-      // Save to invoices table — show error but don't block PDF generation
+    try {
+      await saveLocalDraft();
+
       const { total } = calcTotals(items, taxRate, discount);
+      const totalCents = Math.round(total * 100);
+
+      // Save locally for offline access
+      await saveLocalInvoice(totalCents);
+
+      // Save to invoices table (non-blocking for PDF generation)
       let invoiceSavedOk = false;
       try {
-        await saveInvoiceRecord(Math.round(total * 100));
+        await saveInvoiceRecord(totalCents);
         invoiceSavedOk = true;
       } catch (e: unknown) {
-        const dbMsg = e instanceof Error ? e.message : String(e);
-        setStatus("DB error: " + dbMsg);
-        setTimeout(() => setStatus(""), 10000);
+        // Silent — local save is the fallback
+        console.log("Cloud invoice save skipped (offline):", e instanceof Error ? e.message : String(e));
       }
 
-      // Remove the draft once the invoice is officially saved
-      if (invoiceSavedOk && currentDraftId) {
-        await supabase.from("invoice_drafts").delete().eq("id", currentDraftId);
+      // Remove the draft once the invoice is saved (cloud or local)
+      if (currentDraftId) {
+        try { await supabase.from("invoice_drafts").delete().eq("id", currentDraftId); } catch { /* ok */ }
         setCurrentDraftId(null);
       }
+      // Also clear the local draft
+      await AsyncStorage.removeItem("freesurf_current_draft").catch(() => {});
 
-      // Build PDF — logo errors are now thrown so we can surface them
-      let html = "";
-      try {
-        html = await buildInvoiceHtml();
-      } catch (e: unknown) {
-        const logoMsg = e instanceof Error ? e.message : String(e);
-        setStatus("PDF warning: " + logoMsg + " — generating without logo");
-        setTimeout(() => setStatus(""), 8000);
-        // Temporarily blank logoUrl for this render so buildInvoiceHtml skips the img
-        html = await (async () => {
-          const saved = logoUrl;
-          // Inline fallback: build HTML without logo
-          const sym = CURRENCY_SYMBOLS[currency];
-          const { subtotal, discountAmt, taxAmt, total: t } = calcTotals(items, taxRate, discount);
-          const rows = items.map((item) => {
-            const lt = (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
-            return `<tr><td>${item.description || "—"}</td><td style="text-align:center">${item.quantity}</td><td style="text-align:right">${sym}${parseFloat(item.rate || "0").toFixed(2)}</td><td style="text-align:right">${sym}${lt.toFixed(2)}</td></tr>`;
-          }).join("");
-          void saved;
-          return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body><h1>Invoice ${invoiceNumber}</h1><p>From: ${businessName}</p><p>To: ${clientName}</p><table>${rows}</table><p>Total: ${sym}${t.toFixed(2)}</p></body></html>`;
-        })();
-      }
+      // Build PDF — logo errors are handled internally, will skip logo but keep formatting
+      const html = await buildInvoiceHtml();
 
       const { uri } = await Print.printToFileAsync({ html });
       const safeName = [businessName, invoiceNumber]
         .filter(Boolean)
         .join("_")
         .replace(/[^a-zA-Z0-9_\-]/g, "_") || "invoice";
-      // Move temp file to a named path for a clean filename
       let shareUri = uri;
       try {
         const destUri = (FileSystem.cacheDirectory ?? "") + safeName + ".pdf";
@@ -688,10 +740,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
         await FileSystem.moveAsync({ from: uri, to: destUri });
         shareUri = destUri;
       } catch (e) {
-        // Surface so we can see what's blocking the rename
-        const mvMsg = e instanceof Error ? e.message : String(e);
-        setStatus("Rename error (will share as UUID): " + mvMsg);
-        setTimeout(() => setStatus(""), 8000);
+        // Non-fatal — use the temp URI as-is
       }
       await Sharing.shareAsync(shareUri, { mimeType: "application/pdf", dialogTitle: safeName + ".pdf", UTI: "com.adobe.pdf" });
     } catch (e: unknown) {
@@ -716,28 +765,52 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
     setItems(items.filter((_, i) => i !== index));
   }
 
+  function parseInvoiceDigits(num: string): number {
+    const match = num.match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : 1;
+  }
+
+  function formatInvoiceNumber(digits: number): string {
+    return `INV-${String(Math.max(1, digits)).padStart(3, "0")}`;
+  }
+
+  function incrementInvoiceNumber() {
+    setInvoiceNumber(formatInvoiceNumber(parseInvoiceDigits(invoiceNumber) + 1));
+    scheduleAutoSave();
+  }
+
+  function decrementInvoiceNumber() {
+    const digits = parseInvoiceDigits(invoiceNumber);
+    if (digits > 1) {
+      setInvoiceNumber(formatInvoiceNumber(digits - 1));
+      scheduleAutoSave();
+    }
+  }
+
   function resetForm() {
     setClientName(""); setClientEmail(""); setClientAddress("");
-    setInvoiceNumber("INV-001"); setIssueDate(todayIso()); setDueDate("");
+    setInvoiceNumber(formatInvoiceNumber(parseInvoiceDigits(invoiceNumber) + 1)); setIssueDate(todayIso()); setDueDate("");
     setCurrency("USD"); setTaxRate(""); setDiscount("");
     setNotes(""); setItems([defaultItem()]); setStatus("");
     setCurrentDraftId(null); setInvoiceRecordId(null);
     AsyncStorage.removeItem("freesurf_current_draft").catch(() => {});
-    loadNextInvoiceNumber();
   }
 
-  async function handleSignOut() { await supabase.auth.signOut(); onSignOut(); }
+  async function handleSignOut() { await supabase.auth.signOut(); setUserEmail(""); onSignOut(); }
 
   const { subtotal, discountAmt, taxAmt, total } = calcTotals(items, taxRate, discount);
   const sym = CURRENCY_SYMBOLS[currency];
   const hasBreakdown = discountAmt > 0 || taxAmt > 0;
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-      <TopBar activeScreen="invoice" onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignIn={onSignIn ?? (() => {})} onSignOut={handleSignOut} isLoggedIn={isLoggedIn ?? false} />
+    <View style={styles.root}>
+      <View style={styles.topbarWrap}>
+        <TopBar activeScreen="invoice" onDrafts={onViewDrafts ?? (() => {})} onInvoices={onViewInvoices ?? (() => {})} onSignIn={onSignIn ?? (() => {})} onSignOut={handleSignOut} isLoggedIn={isLoggedIn ?? false} />
+      </View>
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
       {userEmail ? <Text style={styles.userEmail}>{userEmail}</Text> : null}
-      {status ? <Text style={styles.autoSaveStatus}>{status}</Text> : null}
+      {status ? <Text style={styles.autoSaveStatus} numberOfLines={2}>{status}</Text> : null}
 
       <Pressable style={styles.newInvoiceBtn} onPress={resetForm}>
         <Text style={styles.newInvoiceBtnLabel}>+ New invoice</Text>
@@ -767,7 +840,16 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       <TextInput style={[styles.input, styles.textarea]} placeholder="Client address" placeholderTextColor="#9a8f87" multiline value={clientAddress} onChangeText={(v) => { setClientAddress(v); scheduleAutoSave(); }} />
 
       <Text style={styles.sectionTitle}>Invoice details</Text>
-      <TextInput style={styles.input} placeholder="Invoice number" placeholderTextColor="#9a8f87" value={invoiceNumber} onChangeText={(v) => { setInvoiceNumber(v); scheduleAutoSave(); }} />
+      <View style={styles.invoiceNumberRow}>
+        <Text style={styles.invoiceNumberPrefix}>INV-</Text>
+        <Pressable onPress={decrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]} disabled={parseInvoiceDigits(invoiceNumber) <= 1}>
+          <Text style={[styles.invoiceStepperText, parseInvoiceDigits(invoiceNumber) <= 1 && { color: "#d8cfc3" }]}>−</Text>
+        </Pressable>
+        <Text style={styles.invoiceNumberValue}>{String(parseInvoiceDigits(invoiceNumber)).padStart(3, "0")}</Text>
+        <Pressable onPress={incrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]}>
+          <Text style={styles.invoiceStepperText}>+</Text>
+        </Pressable>
+      </View>
       <TextInput style={styles.input} placeholder="Issue date (YYYY-MM-DD)" placeholderTextColor="#9a8f87" value={issueDate} onChangeText={(v) => { setIssueDate(v); scheduleAutoSave(); }} />
       <TextInput style={styles.input} placeholder="Due date (YYYY-MM-DD)" placeholderTextColor="#9a8f87" value={dueDate} onChangeText={(v) => { setDueDate(v); scheduleAutoSave(); }} />
 
@@ -877,7 +959,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       </View>
 
       <Pressable style={styles.saveButton} onPress={async () => { setSaving(true); await saveDraft(false); setSaving(false); }} disabled={saving}>
-        {saving ? <ActivityIndicator color="#0d6b61" /> : <Text style={styles.saveButtonLabel}>Save invoice</Text>}
+        <Text style={styles.saveButtonLabel}>{saving ? "Saving..." : "Save invoice"}</Text>
       </Pressable>
 
       <Pressable style={styles.button} onPress={downloadInvoice} disabled={exporting}>
@@ -894,17 +976,25 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
 
       <View style={styles.spacer} />
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#f4f1ea" },
-  inner: { padding: 20, paddingTop: 56, gap: 10 },
+  topbarWrap: { paddingTop: 56, paddingHorizontal: 20, backgroundColor: "#f4f1ea", zIndex: 10 },
+  scrollArea: { flex: 1 },
+  inner: { padding: 20, paddingTop: 12, gap: 10 },
   userEmail: { fontSize: 12, color: "#675f58" },
-  autoSaveStatus: { fontSize: 12, color: "#0d6b61" },
+  autoSaveStatus: { fontSize: 12, color: "#0d6b61", textAlign: "center", paddingHorizontal: 20, marginBottom: 4 },
   newInvoiceBtn: { backgroundColor: "#0d6b61", borderRadius: 10, paddingVertical: 11, paddingHorizontal: 16, alignSelf: "flex-start" },
   newInvoiceBtnLabel: { color: "#fffdf8", fontSize: 13, fontWeight: "700" },
   sectionTitle: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, color: "#1f1a17", marginTop: 12, marginBottom: 2 },
+  invoiceNumberRow: { flexDirection: "row", alignItems: "center", gap: 0 },
+  invoiceNumberPrefix: { fontSize: 16, fontWeight: "700", color: "#1f1a17", backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d8cfc3", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRightWidth: 0 },
+  invoiceStepper: { backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d8cfc3", paddingHorizontal: 14, paddingVertical: 11 },
+  invoiceStepperText: { fontSize: 18, fontWeight: "600", color: "#0d6b61" },
+  invoiceNumberValue: { fontSize: 16, fontWeight: "700", color: "#1f1a17", backgroundColor: "#fffdf8", borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#d8cfc3", paddingHorizontal: 16, paddingVertical: 11, minWidth: 60, textAlign: "center" },
   input: { backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d8cfc3", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: 14, color: "#1f1a17" },
   textarea: { minHeight: 72, textAlignVertical: "top" },
   currencyRow: { flexDirection: "row", gap: 8 },

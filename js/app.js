@@ -424,31 +424,45 @@ async function handleSaveDraft() {
     }
 
     const draftPayload = buildDraftPayload();
+    const draftName = buildDraftName();
     if (state.savedDraftId) {
       const { error: updateError } = await client
         .from("invoice_drafts")
-        .update({
-          draft_name: buildDraftName(),
-          payload_json: draftPayload,
-        })
+        .update({ draft_name: draftName, payload_json: draftPayload })
         .eq("id", state.savedDraftId)
         .eq("user_id", data.user.id);
-      if (updateError) {
-        throw updateError;
+      if (updateError) throw updateError;
+    } else if (state.invoiceNumber) {
+      // Invoice number is the identity tag — find and update existing draft, or insert new
+      const { data: existingDrafts } = await client
+        .from("invoice_drafts")
+        .select("id")
+        .eq("user_id", data.user.id)
+        .eq("draft_name", state.invoiceNumber)
+        .limit(1);
+      if (existingDrafts && existingDrafts.length > 0) {
+        state.savedDraftId = existingDrafts[0].id;
+        saveState();
+        await client
+          .from("invoice_drafts")
+          .update({ draft_name: draftName, payload_json: draftPayload })
+          .eq("id", existingDrafts[0].id)
+          .eq("user_id", data.user.id);
+      } else {
+        const { data: draftRecord, error: insertError } = await client
+          .from("invoice_drafts")
+          .insert({ user_id: data.user.id, draft_name: draftName, payload_json: draftPayload })
+          .select("id").single();
+        if (insertError) throw insertError;
+        state.savedDraftId = draftRecord.id;
+        saveState();
       }
     } else {
       const { data: draftRecord, error: insertError } = await client
         .from("invoice_drafts")
-        .insert({
-          user_id: data.user.id,
-          draft_name: buildDraftName(),
-          payload_json: draftPayload,
-        })
-        .select("id")
-        .single();
-      if (insertError) {
-        throw insertError;
-      }
+        .insert({ user_id: data.user.id, draft_name: draftName, payload_json: draftPayload })
+        .select("id").single();
+      if (insertError) throw insertError;
       state.savedDraftId = draftRecord.id;
       saveState();
     }
@@ -1687,22 +1701,42 @@ function scheduleAutoSave() {
       const user = data.session.user;
 
       const draftPayload = buildDraftPayload();
+      const draftName = buildDraftName();
       if (state.savedDraftId) {
         await client
           .from("invoice_drafts")
-          .update({ draft_name: buildDraftName(), payload_json: draftPayload })
+          .update({ draft_name: draftName, payload_json: draftPayload })
           .eq("id", state.savedDraftId)
           .eq("user_id", user.id);
+      } else if (state.invoiceNumber) {
+        // Invoice number is the identity tag — find and update existing draft
+        const { data: existingDrafts } = await client
+          .from("invoice_drafts")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("draft_name", state.invoiceNumber)
+          .limit(1);
+        if (existingDrafts && existingDrafts.length > 0) {
+          state.savedDraftId = existingDrafts[0].id;
+          persistStateSilently();
+          await client
+            .from("invoice_drafts")
+            .update({ draft_name: draftName, payload_json: draftPayload })
+            .eq("id", existingDrafts[0].id)
+            .eq("user_id", user.id);
+        } else {
+          const { data: draftRecord } = await client
+            .from("invoice_drafts")
+            .insert({ user_id: user.id, draft_name: draftName, payload_json: draftPayload })
+            .select("id").single();
+          if (draftRecord?.id) { state.savedDraftId = draftRecord.id; persistStateSilently(); }
+        }
       } else {
         const { data: draftRecord } = await client
           .from("invoice_drafts")
-          .insert({ user_id: user.id, draft_name: buildDraftName(), payload_json: draftPayload })
-          .select("id")
-          .single();
-        if (draftRecord?.id) {
-          state.savedDraftId = draftRecord.id;
-          persistStateSilently();
-        }
+          .insert({ user_id: user.id, draft_name: draftName, payload_json: draftPayload })
+          .select("id").single();
+        if (draftRecord?.id) { state.savedDraftId = draftRecord.id; persistStateSilently(); }
       }
       saveStatus.textContent = "Auto-saved.";
       setTimeout(() => { if (saveStatus.textContent === "Auto-saved.") saveStatus.textContent = ""; }, 3000);

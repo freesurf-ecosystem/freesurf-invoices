@@ -19,9 +19,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   onAuthenticated: () => void;
+  onBack?: () => void;
 };
 
-export default function AuthScreen({ onAuthenticated }: Props) {
+export default function AuthScreen({ onAuthenticated, onBack }: Props) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -122,7 +123,14 @@ export default function AuthScreen({ onAuthenticated }: Props) {
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>FreeSurf Invoices</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.brand}>FreeSurf Invoices</Text>
+          {onBack ? (
+            <Pressable onPress={onBack} hitSlop={12} style={styles.closeBtn}>
+              <Text style={styles.closeBtnText}>✕</Text>
+            </Pressable>
+          ) : null}
+        </View>
         <Text style={styles.heading}>{mode === "signin" ? "Sign in" : "Create account"}</Text>
 
         <View style={styles.tabs}>
@@ -208,6 +216,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
           )}
         </Pressable>
 
+{/* Google sign-in hidden until OAuth is configured
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>or</Text>
@@ -225,6 +234,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
             <Text style={styles.socialBtnLabel}>Continue with Google</Text>
           )}
         </Pressable>
+*/}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -233,6 +243,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#f4f1ea" },
   inner: { padding: 28, paddingTop: 72, gap: 14 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   brand: {
     fontSize: 11,
     letterSpacing: 2,
@@ -240,6 +251,12 @@ const styles = StyleSheet.create({
     color: "#0d6b61",
     marginBottom: 4,
   },
+  closeBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.06)",
+    alignItems: "center", justifyContent: "center",
+  },
+  closeBtnText: { fontSize: 14, color: "#9a8f87", lineHeight: 16 },
   heading: { fontSize: 28, fontWeight: "700", color: "#1f1a17", marginBottom: 8 },
   tabs: {
     flexDirection: "row",

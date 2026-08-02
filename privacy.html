@@ -1,58 +1,109 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Policy | FreeSurf Invoices</title>
-    <meta
-      name="description"
-      content="Privacy policy for FreeSurf Invoices."
-    />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="icon" type="image/png" href="./public/logo-favicon.png" />
-  <body>
-    <div class="page-shell page-shell-auth">
-      <header class="hero hero-auth">
-        <div class="hero-topbar">
-          <p class="eyebrow hero-brand">FreeSurf Invoices</p>
-          <div class="hero-actions">
-            <a class="button button-secondary" href="./index.html">Back to invoice maker</a>
-          </div>
-        </div>
-        <div class="hero-copy">
-          <h1>Privacy policy</h1>
-          <p class="lede">How FreeSurf Invoices handles browser data, account-linked invoice data, and product updates.</p>
-        </div>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — FreeSurf</title>
+  <meta name="description" content="Privacy policy for FreeSurf — free tools for freelancers and small businesses." />
+  <style>
+    :root { --bg: #0b1020; --card: #111937; --text: #e8ecff; --muted: #b3bddf; --accent: #5b8cff; --border: #2a3568; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--accent); }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+    h1 { font-size: 2rem; margin-bottom: 8px; }
+    h2 { font-size: 1.25rem; margin-top: 32px; color: var(--accent); }
+    p, li { color: var(--muted); font-size: 0.95rem; margin: 8px 0; }
+    ul { padding-left: 20px; }
+    .updated { font-size: 0.85rem; color: #5f6b7a; margin-bottom: 32px; }
+    .entity { font-size: 0.9rem; color: #5f6b7a; margin-bottom: 24px; padding: 16px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }
+    footer { margin-top: 48px; font-size: 0.8rem; color: #5f6b7a; }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: July 27, 2026</p>
 
-      <main class="panel auth-panel legal-panel">
-        <div class="form-section auth-section-first legal-stack">
-          <div>
-            <p class="eyebrow">Overview</p>
-            <p>FreeSurf Invoices is designed to let you create invoices quickly with minimal friction. Some invoice data can live only in your browser, and some data can be stored in connected services when account features are enabled.</p>
-          </div>
-          <div>
-            <p class="eyebrow">Browser-stored data</p>
-            <p>When you use the invoice maker without signing in, invoice drafts, invoice numbers, and related editing state may be stored locally in your browser so your work is not lost when you refresh or return later.</p>
-          </div>
-          <div>
-            <p class="eyebrow">Account-linked data</p>
-            <p>When connected account features are enabled, business details, client records, saved drafts, and invoice records may be stored in third-party infrastructure used to run the product, including services such as Supabase.</p>
-          </div>
-          <div>
-            <p class="eyebrow">Third-party services</p>
-            <p>FreeSurf Invoices may rely on external providers for authentication, data storage, hosting, and related product operations. Those providers may process data needed to deliver the service.</p>
-          </div>
-          <div>
-            <p class="eyebrow">Your responsibility</p>
-            <p>You are responsible for reviewing invoice content before sending, printing, or sharing it. Avoid entering sensitive information you do not want stored in your browser or connected account systems.</p>
-          </div>
-          <div>
-            <p class="eyebrow">Policy updates</p>
-            <p>This policy is an early production version and will be expanded over time with more specific details about retention, analytics, support contact, and data handling practices.</p>
-          </div>
-        </div>
-      </main>
+    <div class="entity">
+      FreeSurf is a product of <strong>Planting Moon LLC</strong>, located at 5830 E 2nd St, Ste 7000 #35119, Casper, Wyoming 82609.<br />
+      Contact: <a href="mailto:hello@freesurf.tools">hello@freesurf.tools</a>
     </div>
-  </body>
+
+    <p>This Privacy Policy explains how FreeSurf collects, uses, stores, and shares information when you use our apps, websites, and services. FreeSurf provides free utility tools including invoice generation, link-in-bio pages, social media cross-posting, text-to-speech reading, and related services.</p>
+
+    <h2>1. Information We Collect</h2>
+
+    <p><strong>Without an account:</strong> Most FreeSurf tools work without creating an account. When you use tools without signing in, your data (invoice drafts, generated audio, saved recordings, image generations, transcriptions) is stored locally on your device. We do not collect or have access to this locally stored data.</p>
+
+    <p><strong>With an account (optional):</strong> If you choose to create an account, we collect:</p>
+    <ul>
+      <li>Email address and authentication credentials (via Supabase)</li>
+      <li>Invoice drafts, business profiles, client information, and saved invoices you choose to sync to your account</li>
+      <li>Link-in-bio profile content including display name, bio, links, and avatar images</li>
+      <li>Social media account connections and OAuth tokens for cross-posting (Post tool)</li>
+      <li>Support requests and correspondence</li>
+    </ul>
+
+    <p><strong>AI Processing:</strong> Some FreeSurf tools use AI models to generate results. These models run on our own GPU infrastructure (RunPod) — your content is never sent to third-party AI companies like OpenAI or Google. Text, audio, and images are processed in memory and immediately discarded after the result is returned:</p>
+    <ul>
+      <li><strong>Natural Reader:</strong> Text is sent to our self-hosted Kokoro TTS server to generate speech audio.</li>
+      <li><strong>Transcriber:</strong> Audio is sent to our self-hosted Whisper transcription server.</li>
+      <li><strong>Calorie Tracker:</strong> Food photos are sent to our self-hosted vision AI server.</li>
+      <li><strong>Image Maker:</strong> Text prompts are sent to image generation services.</li>
+    </ul>
+
+    <h2>2. How We Use Information</h2>
+    <ul>
+      <li>Provide, maintain, and improve our tools and services</li>
+      <li>Authenticate users who choose to create accounts</li>
+      <li>Sync your data across devices when signed in</li>
+      <li>Respond to support requests</li>
+      <li>Send optional product updates or newsletters (only if you opt in)</li>
+      <li>Maintain security and prevent abuse</li>
+    </ul>
+    <p>We do not sell personal information. We do not use your invoice data, link profiles, posts, or AI-generated content for advertising purposes.</p>
+
+    <h2>3. Advertising</h2>
+    <p>FreeSurf apps may display advertisements through standard ad networks (such as Google AdMob). These networks may use device identifiers for ad delivery and measurement. No personal information from your FreeSurf account or tool usage is shared with advertisers. Ad-supported functionality is disclosed in each app's store listing.</p>
+
+    <h2>4. Third-Party Services</h2>
+    <p>FreeSurf uses the following infrastructure and service providers:</p>
+    <ul>
+      <li><strong>Supabase</strong> — authentication and account data storage</li>
+      <li><strong>Cloudflare</strong> — web hosting, Workers, R2 storage, and KV</li>
+      <li><strong>RunPod</strong> — GPU infrastructure for self-hosted AI models (Kokoro TTS, Whisper, vision models)</li>
+      <li><strong>Replicate / Krea / Flux</strong> — image generation APIs</li>
+      <li><strong>Google AdMob</strong> — in-app advertising</li>
+    </ul>
+    <p>These providers process data on our behalf to deliver specific parts of the service.</p>
+
+    <h2>5. Data Retention & Your Choices</h2>
+    <ul>
+      <li><strong>Local data:</strong> Data stored on your device remains until you delete it or uninstall the app.</li>
+      <li><strong>Account data:</strong> Retained while your account is active. You can delete your account by contacting us.</li>
+      <li><strong>AI processing:</strong> Submitted text, audio, and images are processed in memory and not retained on AI servers.</li>
+      <li><strong>Support requests:</strong> May be retained to resolve issues and document outcomes.</li>
+    </ul>
+
+    <h2>6. Children's Privacy</h2>
+    <p>FreeSurf is not directed to children under 13, and we do not knowingly collect personal information from children under 13.</p>
+
+    <h2>7. Changes</h2>
+    <p>We may update this Privacy Policy. Material changes will be noted with an updated effective date.</p>
+
+    <hr />
+
+    <h2>Contact</h2>
+    <p>For privacy questions, data requests, or account deletion:<br />
+    <a href="mailto:hello@freesurf.tools">hello@freesurf.tools</a></p>
+    <p>Planting Moon LLC<br />5830 E 2nd St, Ste 7000 #35119, Casper, WY 82609</p>
+
+    <footer>
+      <a href="/">FreeSurf</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+    </footer>
+  </div>
+</body>
 </html>

@@ -59,8 +59,11 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
               </Pressable>
             )}
             <View style={styles.divider} />
-            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/privacy"); }}>
-              <Text style={styles.mutedLabel}>Privacy Policy</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>Settings</Text>
+            </View>
+            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://invoices.freesurf.tools/support"); }}>
+              <Text style={styles.mutedLabel}>Support</Text>
             </Pressable>
             <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/terms"); }}>
               <Text style={styles.mutedLabel}>Terms of Service</Text>
@@ -99,6 +102,8 @@ const styles = StyleSheet.create({
   mutedLabel: { fontSize: 14, color: "#675f58" },
   active: { color: "#0d6b61", fontWeight: "700" },
   divider: { height: 1, backgroundColor: "#e8e0d6", marginVertical: 4 },
+  sectionHeader: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 2 },
+  sectionHeaderText: { fontSize: 11, fontWeight: "700", color: "#9a8f87", textTransform: "uppercase", letterSpacing: 1 },
   signOut: { fontSize: 15, color: "#675f58" },
   deleteLabel: { fontSize: 14, color: "#c0392b" },
 });

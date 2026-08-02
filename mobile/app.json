@@ -26,6 +26,9 @@
     },
     "ios": {
       "bundleIdentifier": "tools.freesurf.invoices",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {

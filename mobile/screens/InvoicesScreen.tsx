@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import TopBar from "../components/TopBar";
@@ -67,18 +68,57 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
   async function loadInvoices() {
     setLoading(true);
     setLoadError("");
+    const allInvoices: Invoice[] = [];
+
+    // Load local invoices first
+    try {
+      const localJson = await AsyncStorage.getItem("freesurf_local_invoices");
+      if (localJson) {
+        const localInvoices = JSON.parse(localJson) as Array<{
+          id: string;
+          invoice_number: string;
+          issue_date: string;
+          currency: string;
+          total_cents: number;
+          status: string;
+          client_name: string | null;
+          created_at: string;
+        }>;
+        allInvoices.push(
+          ...localInvoices.map((li) => ({
+            id: li.id,
+            invoice_number: li.invoice_number,
+            issue_date: li.issue_date,
+            currency: li.currency,
+            total_cents: li.total_cents,
+            status: li.status,
+            client: li.client_name ? { client_name: li.client_name } : null,
+          }))
+        );
+      }
+    } catch { /* ignore */ }
+
+    // Load cloud invoices if logged in
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
-    if (!user) { setLoading(false); return; }
+    if (user) {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("id, invoice_number, issue_date, currency, total_cents, status, client:invoice_clients (client_name)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .select("id, invoice_number, issue_date, currency, total_cents, status, client:invoice_clients (client_name)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      if (error) setLoadError(`Load error: ${error.code} — ${error.message}`);
+      const cloudInvoices = (data as unknown as Invoice[]) || [];
 
-    if (error) setLoadError(`Load error: ${error.code} — ${error.message}`);
-    setInvoices((data as unknown as Invoice[]) || []);
+      // Merge: deduplicate by invoice_number, preferring cloud version
+      const localNumbers = new Set(allInvoices.map((i) => i.invoice_number));
+      const dedupedLocal = allInvoices.filter((li) => !cloudInvoices.some((ci) => ci.invoice_number === li.invoice_number));
+      allInvoices.length = 0;
+      allInvoices.push(...cloudInvoices, ...dedupedLocal);
+    }
+
+    setInvoices(allInvoices);
     setLoading(false);
   }
 
@@ -94,8 +134,19 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
   }
 
   async function deleteInvoice(id: string) {
-    await supabase.from("invoice_items").delete().eq("invoice_id", id);
-    await supabase.from("invoices").delete().eq("id", id);
+    if (id.startsWith("local_")) {
+      try {
+        const json = await AsyncStorage.getItem("freesurf_local_invoices");
+        if (json) {
+          const existing = JSON.parse(json);
+          const filtered = existing.filter((inv: { id: string }) => inv.id !== id);
+          await AsyncStorage.setItem("freesurf_local_invoices", JSON.stringify(filtered));
+        }
+      } catch { /* ignore */ }
+    } else {
+      await supabase.from("invoice_items").delete().eq("invoice_id", id);
+      await supabase.from("invoices").delete().eq("id", id);
+    }
     setInvoices((prev) => prev.filter((inv) => inv.id !== id));
   }
 
@@ -134,31 +185,53 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
           renderItem={({ item }) => {
             const statusKey = item.status || "draft";
             const statusColor = STATUS_COLORS[statusKey] || "#9a8f87";
+            const isLocal = item.id.startsWith("local_");
             return (
               <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>
-                  {item.total_cents != null && (
-                    <Text style={styles.cardAmount}>{formatMoney(item.total_cents, item.currency)}</Text>
-                  )}
-                </View>
-                {item.client?.client_name ? (
-                  <Text style={styles.cardMeta}>{item.client.client_name}</Text>
-                ) : null}
-                <View style={styles.cardFooter}>
-                  {item.issue_date ? <Text style={styles.cardDate}>{formatDate(item.issue_date)}</Text> : null}
-                  <View style={[styles.badge, { backgroundColor: statusColor + "22" }]}>
-                    <Text style={[styles.badgeText, { color: statusColor }]}>
-                      {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
-                    </Text>
+                {isLocal ? (
+                  <View style={styles.cardBody}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>
+                      {item.total_cents != null && (
+                        <Text style={styles.cardAmount}>{formatMoney(item.total_cents, item.currency)}</Text>
+                      )}
+                    </View>
+                    {item.client?.client_name ? (
+                      <Text style={styles.cardMeta}>{item.client.client_name}</Text>
+                    ) : null}
+                    <View style={styles.cardFooter}>
+                      {item.issue_date ? <Text style={styles.cardDate}>{formatDate(item.issue_date)}</Text> : null}
+                      <View style={[styles.badge, { backgroundColor: statusColor + "22" }]}>
+                        <Text style={[styles.badgeText, { color: statusColor }]}>
+                          {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
+                ) : (
                   <Pressable
+                    style={({ pressed }) => [styles.cardBody, pressed && { opacity: 0.7, backgroundColor: "rgba(13,107,97,0.04)" }]}
                     onPress={() => onEditInvoice(item.id)}
-                    style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.6 }]}
                   >
-                    <Text style={styles.editBtnText}>Edit</Text>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>
+                      {item.total_cents != null && (
+                        <Text style={styles.cardAmount}>{formatMoney(item.total_cents, item.currency)}</Text>
+                      )}
+                    </View>
+                    {item.client?.client_name ? (
+                      <Text style={styles.cardMeta}>{item.client.client_name}</Text>
+                    ) : null}
+                    <View style={styles.cardFooter}>
+                      {item.issue_date ? <Text style={styles.cardDate}>{formatDate(item.issue_date)}</Text> : null}
+                      <View style={[styles.badge, { backgroundColor: statusColor + "22" }]}>
+                        <Text style={[styles.badgeText, { color: statusColor }]}>
+                          {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
+                        </Text>
+                      </View>
+                    </View>
                   </Pressable>
-                </View>
+                )}
                 <Pressable
                   onPress={() => confirmDeleteInvoice(item.id)}
                   hitSlop={8}
@@ -186,10 +259,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#d8cfc3",
     borderRadius: 16,
+    position: "relative",
+  },
+  cardBody: {
     padding: 16,
     paddingRight: 36,
     gap: 4,
-    position: "relative",
+    borderRadius: 16,
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardTitle: { fontSize: 15, fontWeight: "600", color: "#1f1a17", flex: 1 },
@@ -199,14 +275,6 @@ const styles = StyleSheet.create({
   cardDate: { fontSize: 12, color: "#9a8f87" },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
   badgeText: { fontSize: 11, fontWeight: "600" },
-  editBtn: {
-    marginLeft: "auto",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: "#0d6b6122",
-  },
-  editBtnText: { fontSize: 12, fontWeight: "600", color: "#0d6b61" },
   deleteX: {
     position: "absolute",
     top: 8,
