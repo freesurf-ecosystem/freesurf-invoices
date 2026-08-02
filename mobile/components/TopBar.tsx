@@ -55,7 +55,7 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
               </Pressable>
             ) : (
               <Pressable style={styles.item} onPress={() => { setOpen(false); onSignIn(); }}>
-                <Text style={styles.label}>Sign in</Text>
+                <Text style={styles.label}>Sign in / Sign up</Text>
               </Pressable>
             )}
             <View style={styles.divider} />
