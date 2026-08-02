@@ -817,6 +817,17 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
         <Text style={styles.newInvoiceBtnLabel}>+ New invoice</Text>
       </Pressable>
 
+      <View style={styles.invoiceNumberStepper}>
+        <Text style={styles.invoiceNumberPrefix}>INV-</Text>
+        <Pressable onPress={decrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]} disabled={parseInvoiceDigits(invoiceNumber) <= 1}>
+          <Text style={[styles.invoiceStepperText, parseInvoiceDigits(invoiceNumber) <= 1 && { color: "#d8cfc3" }]}>−</Text>
+        </Pressable>
+        <Text style={styles.invoiceNumberValue}>{String(parseInvoiceDigits(invoiceNumber)).padStart(3, "0")}</Text>
+        <Pressable onPress={incrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]}>
+          <Text style={styles.invoiceStepperText}>+</Text>
+        </Pressable>
+      </View>
+
       <Text style={styles.sectionTitle}>Your business</Text>
       <TextInput style={styles.input} placeholder="Business name" placeholderTextColor="#9a8f87" value={businessName} onChangeText={(v) => { setBusinessName(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
       <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9a8f87" keyboardType="email-address" autoCapitalize="none" value={businessEmail} onChangeText={(v) => { setBusinessEmail(v); scheduleAutoSave(); scheduleProfileSave(); scheduleLocalProfileSave(); }} />
@@ -841,16 +852,6 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       <TextInput style={[styles.input, styles.textarea]} placeholder="Client address" placeholderTextColor="#9a8f87" multiline value={clientAddress} onChangeText={(v) => { setClientAddress(v); scheduleAutoSave(); }} />
 
       <Text style={styles.sectionTitle}>Invoice details</Text>
-      <View style={styles.invoiceNumberRow}>
-        <Text style={styles.invoiceNumberPrefix}>INV-</Text>
-        <Pressable onPress={decrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]} disabled={parseInvoiceDigits(invoiceNumber) <= 1}>
-          <Text style={[styles.invoiceStepperText, parseInvoiceDigits(invoiceNumber) <= 1 && { color: "#d8cfc3" }]}>−</Text>
-        </Pressable>
-        <Text style={styles.invoiceNumberValue}>{String(parseInvoiceDigits(invoiceNumber)).padStart(3, "0")}</Text>
-        <Pressable onPress={incrementInvoiceNumber} style={({ pressed }) => [styles.invoiceStepper, pressed && { opacity: 0.5 }]}>
-          <Text style={styles.invoiceStepperText}>+</Text>
-        </Pressable>
-      </View>
       <TextInput style={styles.input} placeholder="Issue date (YYYY-MM-DD)" placeholderTextColor="#9a8f87" value={issueDate} onChangeText={(v) => { setIssueDate(v); scheduleAutoSave(); }} />
       <TextInput style={styles.input} placeholder="Due date (YYYY-MM-DD)" placeholderTextColor="#9a8f87" value={dueDate} onChangeText={(v) => { setDueDate(v); scheduleAutoSave(); }} />
 
@@ -991,7 +992,7 @@ const styles = StyleSheet.create({
   newInvoiceBtn: { backgroundColor: "#0d6b61", borderRadius: 10, paddingVertical: 11, paddingHorizontal: 16, alignSelf: "flex-start" },
   newInvoiceBtnLabel: { color: "#fffdf8", fontSize: 13, fontWeight: "700" },
   sectionTitle: { fontSize: 13, fontWeight: "700", letterSpacing: 0.5, color: "#1f1a17", marginTop: 12, marginBottom: 2 },
-  invoiceNumberRow: { flexDirection: "row", alignItems: "center", gap: 0 },
+  invoiceNumberStepper: { flexDirection: "row", alignItems: "center", marginTop: 12 },
   invoiceNumberPrefix: { fontSize: 16, fontWeight: "700", color: "#1f1a17", backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d8cfc3", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRightWidth: 0 },
   invoiceStepper: { backgroundColor: "#fffdf8", borderWidth: 1, borderColor: "#d8cfc3", paddingHorizontal: 14, paddingVertical: 11 },
   invoiceStepperText: { fontSize: 18, fontWeight: "600", color: "#0d6b61" },
