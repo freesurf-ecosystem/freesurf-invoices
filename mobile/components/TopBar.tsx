@@ -65,11 +65,11 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
             <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://invoices.freesurf.tools/support"); }}>
               <Text style={styles.mutedLabel}>Support</Text>
             </Pressable>
+            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/privacy"); }}>
+              <Text style={styles.mutedLabel}>Privacy Policy</Text>
+            </Pressable>
             <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://freesurf.tools/terms"); }}>
               <Text style={styles.mutedLabel}>Terms of Service</Text>
-            </Pressable>
-            <Pressable style={styles.item} onPress={() => { setOpen(false); Linking.openURL("https://invoices.freesurf.tools/support"); }}>
-              <Text style={styles.mutedLabel}>Support</Text>
             </Pressable>
             {isLoggedIn && (
               <Pressable style={styles.item} onPress={handleDeleteAccount}>
