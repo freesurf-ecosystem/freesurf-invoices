@@ -83,6 +83,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
   const [items, setItems] = useState<LineItem[]>([defaultItem()]);
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveLabel, setSaveLabel] = useState("Save invoice");
   const [status, setStatus] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -958,8 +959,8 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
           <Text style={styles.previewBrand}>Free Invoice Maker | FreeSurf Invoices</Text>
       </View>
 
-      <Pressable style={styles.saveButton} onPress={async () => { setSaving(true); await saveDraft(false); setSaving(false); }} disabled={saving}>
-        <Text style={styles.saveButtonLabel}>{saving ? "Saving..." : "Save invoice"}</Text>
+      <Pressable style={styles.saveButton} onPress={async () => { setSaving(true); setSaveLabel("Saving..."); await saveDraft(false); setSaving(false); setSaveLabel("Updated in Drafts"); setTimeout(() => setSaveLabel("Save invoice"), 2500); }} disabled={saving}>
+        <Text style={styles.saveButtonLabel}>{saveLabel}</Text>
       </Pressable>
 
       <Pressable style={styles.button} onPress={downloadInvoice} disabled={exporting}>

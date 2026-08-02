@@ -20,5 +20,12 @@
         "buildType": "app-bundle"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "assist@plantingmoon.com"
+      }
+    }
   }
 }
