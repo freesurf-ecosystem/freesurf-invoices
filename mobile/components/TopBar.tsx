@@ -17,10 +17,10 @@ export default function TopBar({ activeScreen, onNewInvoice, onDrafts, onInvoice
   function handleDeleteAccount() {
     Alert.alert(
       "Delete account",
-      "This will permanently delete your FreeSurf account and all synced data. This cannot be undone.",
+      "View instructions for deleting your account and associated data.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => Linking.openURL("mailto:support@freesurf.tools?subject=Account%20deletion%20request") },
+        { text: "View", onPress: () => { setOpen(false); Linking.openURL("https://invoices.freesurf.tools/support"); } },
       ]
     );
   }
