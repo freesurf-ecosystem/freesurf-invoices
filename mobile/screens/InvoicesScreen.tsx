@@ -188,31 +188,10 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
             const isLocal = item.id.startsWith("local_");
             return (
               <View style={styles.card}>
-                {isLocal ? (
-                  <View style={styles.cardBody}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>
-                      {item.total_cents != null && (
-                        <Text style={styles.cardAmount}>{formatMoney(item.total_cents, item.currency)}</Text>
-                      )}
-                    </View>
-                    {item.client?.client_name ? (
-                      <Text style={styles.cardMeta}>{item.client.client_name}</Text>
-                    ) : null}
-                    <View style={styles.cardFooter}>
-                      {item.issue_date ? <Text style={styles.cardDate}>{formatDate(item.issue_date)}</Text> : null}
-                      <View style={[styles.badge, { backgroundColor: statusColor + "22" }]}>
-                        <Text style={[styles.badgeText, { color: statusColor }]}>
-                          {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                ) : (
-                  <Pressable
-                    style={({ pressed }) => [styles.cardBody, pressed && { opacity: 0.7, backgroundColor: "rgba(13,107,97,0.04)" }]}
-                    onPress={() => onEditInvoice(item.id)}
-                  >
+                <Pressable
+                  style={({ pressed }) => [styles.cardBody, pressed && { opacity: 0.7, backgroundColor: "rgba(13,107,97,0.04)" }]}
+                  onPress={() => isLocal ? Alert.alert("Local invoice", "This invoice is saved locally on your device. Sign in to sync and edit across devices.") : onEditInvoice(item.id)}
+                >
                     <View style={styles.cardHeader}>
                       <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>
                       {item.total_cents != null && (
@@ -231,7 +210,6 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
                       </View>
                     </View>
                   </Pressable>
-                )}
                 <Pressable
                   onPress={() => confirmDeleteInvoice(item.id)}
                   hitSlop={8}
