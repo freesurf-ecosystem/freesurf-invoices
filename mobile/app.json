@@ -54,6 +54,7 @@
       }
     },
     "plugins": [
+      "expo-tracking-transparency",
       [
         "expo-image-picker",
         {
@@ -79,6 +80,13 @@
             "buildToolsVersion": "35.0.0",
             "useLegacyPackaging": false
           }
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5237160801083269~6464265711",
+          "iosAppId": "ca-app-pub-5237160801083269~6464265711"
         }
       ]
     ]

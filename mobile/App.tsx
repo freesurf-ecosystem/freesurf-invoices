@@ -2,7 +2,8 @@ import * as Sentry from "@sentry/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Platform, AppState } from "react-native";
+import mobileAds from "react-native-google-mobile-ads";
 
 Sentry.init({
   dsn: "https://2681c17429bc51f4bf11e6939f827279@o4511383545184256.ingest.us.sentry.io/4511383549575168",
@@ -11,7 +12,7 @@ Sentry.init({
   enabled: !__DEV__,
 });
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
+import { requestTrackingPermissionsAsync, getTrackingPermissionsAsync } from "expo-tracking-transparency";
 import AuthScreen from "./screens/AuthScreen";
 import DraftsScreen from "./screens/DraftsScreen";
 import CreateInvoiceScreen from "./screens/CreateInvoiceScreen";
@@ -43,7 +44,46 @@ function App() {
   }, []);
 
   useEffect(() => {
-    requestTrackingPermissionsAsync().catch(() => {});
+    if (Platform.OS !== "ios") {
+      mobileAds().initialize().catch(() => {});
+      return;
+    }
+
+    let requested = false;
+
+    const requestATT = async () => {
+      if (requested) return;
+      requested = true;
+      try {
+        const { status } = await getTrackingPermissionsAsync();
+        console.log("[ATT] initial status:", status);
+        if (status === "undetermined") {
+          const req = await requestTrackingPermissionsAsync();
+          console.log("[ATT] requested, new status:", req.status);
+        } else {
+          console.log("[ATT] already determined:", status);
+        }
+      } catch (e: any) {
+        console.log("[ATT] error:", e?.message || e);
+      } finally {
+        // Initialize ads only after ATT is settled so no tracking data is
+        // collected before the permission request is shown.
+        mobileAds().initialize().catch(() => {});
+      }
+    };
+
+    // Apple only shows the ATT prompt when the app is in the active state.
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        requestATT();
+      }
+    });
+
+    if (AppState.currentState === "active") {
+      requestATT();
+    }
+
+    return () => subscription.remove();
   }, []);
 
   if (!initialized) {

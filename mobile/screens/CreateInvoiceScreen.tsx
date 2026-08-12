@@ -17,6 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { supabase } from "../lib/supabase";
+import { showInterstitial, showRewarded } from "../lib/ads";
 import TopBar from "../components/TopBar";
 
 type LineItem = { description: string; quantity: string; rate: string };
@@ -712,6 +713,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       try {
         await saveInvoiceRecord(totalCents);
         invoiceSavedOk = true;
+        showInterstitial();
       } catch (e: unknown) {
         // Silent — local save is the fallback
         console.log("Cloud invoice save skipped (offline):", e instanceof Error ? e.message : String(e));
@@ -743,6 +745,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       } catch (e) {
         // Non-fatal — use the temp URI as-is
       }
+      showRewarded();
       await Sharing.shareAsync(shareUri, { mimeType: "application/pdf", dialogTitle: safeName + ".pdf", UTI: "com.adobe.pdf" });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
