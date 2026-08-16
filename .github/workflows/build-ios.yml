@@ -1,0 +1,103 @@
+﻿name: Build iOS
+
+# iOS build on GitHub's macOS runner + manual signing + TestFlight upload.
+#
+# Required secrets:
+#   org:  APPSTORE_CONNECT_API_KEY (base64 .p8), APPSTORE_CONNECT_KEY_ID,
+#         APPSTORE_CONNECT_ISSUER_ID, APPLE_DISTRIBUTION_CERT_P12 (base64 .p12),
+#         APPLE_DISTRIBUTION_CERT_PASSWORD
+#   repo: APPLE_PROVISIONING_PROFILE (base64 .mobileprovision)
+#
+# DRAFT â€” the scheme/workspace name ("Invoices") and team ID are placeholders
+# to confirm on the first run (see "Archive" step).
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-ios.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm install
+
+      - name: Prebuild iOS
+        working-directory: mobile
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: mobile/ios
+        run: pod install
+
+      - name: Install signing certificate + profile
+        env:
+          CERT_B64: ${{ secrets.APPLE_DISTRIBUTION_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERT_PASSWORD }}
+          PROFILE_B64: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+        run: |
+          echo "$CERT_B64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import "$RUNNER_TEMP/dist.p12" -k build.keychain -P "$CERT_PASSWORD" -A
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$PROFILE_B64" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision"
+
+      - name: Archive
+        working-directory: mobile/ios
+        run: |
+          # TODO: confirm the workspace/scheme name. Expo prebuild names it after
+          # the app.json "name" (here "Invoices"). If wrong, run:
+          #   xcodebuild -list -workspace *.xcworkspace
+          PROFILE_UUID=$(security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision" | plutil -extract UUID raw -)
+          xcodebuild archive \
+            -workspace Invoices.xcworkspace \
+            -scheme Invoices \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/Invoices.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE="$PROFILE_UUID" \
+            DEVELOPMENT_TEAM=7VPZRXLNR3
+
+      - name: Export IPA
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>7VPZRXLNR3</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Invoices.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist"
+
+      - name: Upload to TestFlight
+        env:
+          API_KEY_B64: ${{ secrets.APPSTORE_CONNECT_API_KEY }}
+          API_KEY_ID: ${{ secrets.APPSTORE_CONNECT_KEY_ID }}
+          API_ISSUER: ${{ secrets.APPSTORE_CONNECT_ISSUER_ID }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$API_KEY_B64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+          xcrun altool --upload-app --type ios \
+            -f "$RUNNER_TEMP/export/Invoices.ipa" \
+            --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER"

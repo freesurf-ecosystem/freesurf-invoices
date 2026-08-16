@@ -1,6 +1,6 @@
-name: Build Android
+﻿name: Build Android
 
-# Free Android release build — replaces EAS cloud builds.
+# Free Android release build â€” replaces EAS cloud builds.
 # Produces an installable APK (debug-signed by default). For Play Store release,
 # add a keystore + signing config (see README note).
 #
@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Setup Java
         uses: actions/setup-java@v4
