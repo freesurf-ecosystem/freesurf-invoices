@@ -8,8 +8,8 @@
 #         APPLE_DISTRIBUTION_CERT_PASSWORD
 #   repo: APPLE_PROVISIONING_PROFILE (base64 .mobileprovision)
 #
-# DRAFT â€” the scheme/workspace name ("Invoices") and team ID are placeholders
-# to confirm on the first run (see "Archive" step).
+# The Xcode workspace/scheme name is discovered automatically after prebuild,
+# so no per-app scheme edits are needed.
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: mobile/ios
-        run: pod install
+        run: if [ -f Podfile ]; then pod install; fi
 
       - name: Install signing certificate + profile
         env:
@@ -64,16 +64,16 @@ jobs:
       - name: Archive
         working-directory: mobile/ios
         run: |
-          # TODO: confirm the workspace/scheme name. Expo prebuild names it after
-          # the app.json "name" (here "Invoices"). If wrong, run:
-          #   xcodebuild -list -workspace *.xcworkspace
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          echo "workspace=$WORKSPACE scheme=$SCHEME"
           PROFILE_UUID=$(security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision" | plutil -extract UUID raw -)
           xcodebuild archive \
-            -workspace Invoices.xcworkspace \
-            -scheme Invoices \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release \
-            -archivePath "$RUNNER_TEMP/Invoices.xcarchive" \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE="$PROFILE_UUID" \
@@ -90,7 +90,7 @@ jobs:
           </dict></plist>
           EOF
           xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/Invoices.xcarchive" \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/export.plist"
 
@@ -102,6 +102,5 @@ jobs:
         run: |
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           echo "$API_KEY_B64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
-          xcrun altool --upload-app --type ios \
-            -f "$RUNNER_TEMP/export/Invoices.ipa" \
-            --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER"
+          IPA=$(ls "$RUNNER_TEMP/export"/*.ipa | head -1)
+          xcrun altool --upload-app --type ios -f "$IPA" --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER"
