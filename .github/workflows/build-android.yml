@@ -44,6 +44,10 @@ jobs:
         working-directory: mobile
         run: npx expo prebuild --platform android --no-install
 
+      - name: Configure Gradle memory
+        working-directory: mobile/android
+        run: echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
+
       - name: Setup Android signing
         working-directory: mobile/android
         env:
