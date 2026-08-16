@@ -72,6 +72,7 @@ jobs:
             -configuration Release \
             -archivePath "$RUNNER_TEMP/Invoices.xcarchive" \
             CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE="$PROFILE_UUID" \
             DEVELOPMENT_TEAM=7VPZRXLNR3
 
