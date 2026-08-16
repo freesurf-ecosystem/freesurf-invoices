@@ -46,7 +46,7 @@ jobs:
 
       - name: Configure Gradle memory
         working-directory: mobile/android
-        run: echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
+        run: printf '\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n' >> gradle.properties
 
       - name: Setup Android signing
         working-directory: mobile/android
