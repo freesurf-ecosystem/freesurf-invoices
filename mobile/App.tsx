@@ -153,6 +153,7 @@ function App() {
                   onSignOut={() => setSession(false)}
                   isLoggedIn={Boolean(session)}
                   onEditInvoice={(id) => props.navigation.navigate("CreateInvoice", { invoiceId: id })}
+                  onOpenLocalInvoice={(payload) => props.navigation.navigate("CreateInvoice", { draftPayload: payload })}
                 />
               )}
           </Stack.Screen>

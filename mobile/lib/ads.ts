@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { InterstitialAd, RewardedAd, TestIds, AdEventType } from "react-native-google-mobile-ads";
+import { InterstitialAd, RewardedAd, TestIds, AdEventType, RewardedAdEventType } from "react-native-google-mobile-ads";
 
 const INTERSTITIAL_ID = Platform.select({
   ios: TestIds.INTERSTITIAL,
@@ -54,7 +54,7 @@ export async function showRewarded(): Promise<boolean> {
       rewarded = createRewarded();
       rewarded.load();
     };
-    rewarded!.addAdEventListener(AdEventType.REWARDED, onEarned);
+    rewarded!.addAdEventListener(RewardedAdEventType.EARNED_REWARD, onEarned);
     rewarded!.addAdEventListener(AdEventType.CLOSED, onClosed);
     rewarded!.addAdEventListener(AdEventType.ERROR, onError);
     rewarded!.show().catch(() => { resolve(false); cleanup(); });

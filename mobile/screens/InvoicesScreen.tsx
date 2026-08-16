@@ -21,6 +21,7 @@ type Invoice = {
   total_cents: number | null;
   status: string | null;
   client: { client_name: string | null } | null;
+  payload?: Record<string, unknown>;
 };
 
 type Props = {
@@ -29,6 +30,7 @@ type Props = {
   onSignIn: () => void;
   onSignOut: () => void;
   onEditInvoice: (id: string) => void;
+  onOpenLocalInvoice: (payload: Record<string, unknown>) => void;
   isLoggedIn: boolean;
 };
 
@@ -54,7 +56,7 @@ function formatMoney(cents: number | null, currency: string | null) {
   return `${sym}${((cents || 0) / 100).toFixed(2)}`;
 }
 
-export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSignOut, onEditInvoice, isLoggedIn }: Props) {
+export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSignOut, onEditInvoice, onOpenLocalInvoice, isLoggedIn }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -83,6 +85,7 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
           status: string;
           client_name: string | null;
           created_at: string;
+          payload?: Record<string, unknown>;
         }>;
         allInvoices.push(
           ...localInvoices.map((li) => ({
@@ -93,6 +96,7 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
             total_cents: li.total_cents,
             status: li.status,
             client: li.client_name ? { client_name: li.client_name } : null,
+            payload: li.payload,
           }))
         );
       }
@@ -190,7 +194,7 @@ export default function InvoicesScreen({ onNewInvoice, onDrafts, onSignIn, onSig
               <View style={styles.card}>
                 <Pressable
                   style={({ pressed }) => [styles.cardBody, pressed && { opacity: 0.7, backgroundColor: "rgba(13,107,97,0.04)" }]}
-                  onPress={() => isLocal ? Alert.alert("Local invoice", "This invoice is saved locally on your device. Sign in to sync and edit across devices.") : onEditInvoice(item.id)}
+                  onPress={() => isLocal ? (item.payload ? onOpenLocalInvoice(item.payload) : Alert.alert("Local invoice", "This invoice is saved locally on your device. Sign in to sync and edit across devices.")) : onEditInvoice(item.id)}
                 >
                     <View style={styles.cardHeader}>
                       <Text style={styles.cardTitle}>{item.invoice_number || "Invoice"}</Text>

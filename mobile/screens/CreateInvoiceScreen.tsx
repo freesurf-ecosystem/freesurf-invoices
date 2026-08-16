@@ -73,6 +73,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
   const [logoUrl, setLogoUrl] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("INV-001");
   const [issueDate, setIssueDate] = useState(todayIso());
@@ -124,6 +125,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     if (p.logoUrl !== undefined) setLogoUrl(p.logoUrl as string);
     if (p.clientName) setClientName(p.clientName as string);
     if (p.clientEmail) setClientEmail(p.clientEmail as string);
+    if (p.clientPhone) setClientPhone(p.clientPhone as string);
     if (p.clientAddress) setClientAddress(p.clientAddress as string);
     if (p.invoiceNumber) setInvoiceNumber(p.invoiceNumber as string);
     if (p.issueDate) setIssueDate(p.issueDate as string);
@@ -168,7 +170,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     try {
       const payload = {
         businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
-        clientName, clientEmail, clientAddress,
+        clientName, clientEmail, clientPhone, clientAddress,
         invoiceNumber, issueDate, dueDate, currency, taxRate, discount, notes,
         items: items.map((i) => ({ description: i.description, quantity: parseFloat(i.quantity) || 1, rate: parseFloat(i.rate) || 0 })),
       };
@@ -186,7 +188,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
         currency: string;
         total_cents: number;
         status: string;
-        client_name: string;
+        client_name: string | null;
         created_at: string;
       }> = existingJson ? JSON.parse(existingJson) : [];
 
@@ -199,6 +201,12 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
         status: "sent",
         client_name: clientName || null,
         created_at: new Date().toISOString(),
+        payload: {
+          businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
+          clientName, clientEmail, clientPhone, clientAddress,
+          invoiceNumber, issueDate, dueDate, currency, taxRate, discount, notes,
+          items: items.map((i) => ({ description: i.description, quantity: parseFloat(i.quantity) || 1, rate: parseFloat(i.rate) || 0 })),
+        },
       };
 
       // Deduplicate: replace existing local invoice with same number
@@ -273,7 +281,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
     try {
       const { data, error } = await supabase
         .from("invoices")
-        .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email, address_line_1), invoice_items(description, quantity, unit_price_cents)")
+        .select("invoice_number, issue_date, due_date, currency, notes, status, invoice_clients(client_name, email, phone, address_line_1), invoice_items(description, quantity, unit_price_cents)")
         .eq("id", id)
         .single();
       if (error || !data) {
@@ -288,9 +296,10 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
       if (data.due_date) setDueDate(data.due_date as string);
       if (data.currency && (CURRENCIES as readonly string[]).includes(data.currency)) setCurrency(data.currency as Currency);
       if (data.notes) setNotes(data.notes);
-      const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null; address_line_1: string | null } | null;
+      const client = Array.isArray(data.invoice_clients) ? data.invoice_clients[0] : data.invoice_clients as { client_name: string | null; email: string | null; phone: string | null; address_line_1: string | null } | null;
       if (client?.client_name) { setClientName(client.client_name); } else { setClientName(""); }
       if (client?.email) { setClientEmail(client.email); } else { setClientEmail(""); }
+      if (client?.phone) { setClientPhone(client.phone); } else { setClientPhone(""); }
       if (client?.address_line_1) { setClientAddress(client.address_line_1); } else { setClientAddress(""); }
       const rawItems = Array.isArray(data.invoice_items) ? data.invoice_items : [];
       if (rawItems.length > 0) {
@@ -474,6 +483,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
 
   async function saveDraft(silent = false) {
     await saveLocalDraft();
+    await saveLocalProfile();
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user;
     if (!user) {
@@ -482,7 +492,7 @@ export default function CreateInvoiceScreen({ onSignOut, onSignIn, onViewDrafts,
 
     const payload = {
       businessName, businessEmail, businessPhone, businessWebsite, businessAddress, logoUrl,
-      clientName, clientEmail, clientAddress,
+      clientName, clientEmail, clientPhone, clientAddress,
       invoiceNumber, issueDate, dueDate, currency, taxRate, discount, notes,
       items: items.map((i) => ({
         description: i.description,
@@ -557,7 +567,7 @@ td{padding:8px 0;border-bottom:1px solid #e8e0d6;font-size:14px}
 <div style="text-align:right">${issueDate ? `<p class="meta">Issued: ${issueDate}</p>` : ""}${dueDate ? `<p class="meta">Due: ${dueDate}</p>` : ""}</div></div>
 <div class="parties">
 <div class="party"><h3>From</h3>${resolvedLogo ? `<img src="${resolvedLogo}" style="max-height:50px;max-width:140px;object-fit:contain;display:block;margin-bottom:6px"/>` : ""}${businessName ? `<p><strong>${businessName}</strong></p>` : ""}${businessEmail ? `<p>${businessEmail}</p>` : ""}${businessPhone ? `<p>${businessPhone}</p>` : ""}${businessWebsite ? `<p>${businessWebsite}</p>` : ""}${businessAddress ? `<p>${businessAddress.replace(/\n/g, "<br/>")}</p>` : ""}</div>
-<div class="party"><h3>To</h3>${clientName ? `<p><strong>${clientName}</strong></p>` : ""}${clientEmail ? `<p>${clientEmail}</p>` : ""}${clientAddress ? `<p>${clientAddress.replace(/\n/g, "<br/>")}</p>` : ""}</div>
+<div class="party"><h3>To</h3>${clientName ? `<p><strong>${clientName}</strong></p>` : ""}${clientEmail ? `<p>${clientEmail}</p>` : ""}${clientPhone ? `<p>${clientPhone}</p>` : ""}${clientAddress ? `<p>${clientAddress.replace(/\n/g, "<br/>")}</p>` : ""}</div>
 </div>
 <table><thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table>
 <div style="display:flex;justify-content:flex-end"><table class="totals">
@@ -601,13 +611,14 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
           .update({
             business_profile_id: businessProfileId,
             email: clientEmail || null,
+            phone: clientPhone || null,
             address_line_1: clientAddress || null,
           })
           .eq("id", clientId);
       } else {
         const { data: newClient, error: clientErr } = await supabase
           .from("invoice_clients")
-            .insert({ user_id: user.id, business_profile_id: businessProfileId, client_name: clientName, email: clientEmail || null })
+            .insert({ user_id: user.id, business_profile_id: businessProfileId, client_name: clientName, email: clientEmail || null, phone: clientPhone || null })
           .select("id")
           .single();
         if (clientErr) {
@@ -701,6 +712,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
 
     try {
       await saveLocalDraft();
+      await saveLocalProfile();
 
       const { total } = calcTotals(items, taxRate, discount);
       const totalCents = Math.round(total * 100);
@@ -792,7 +804,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
   }
 
   function resetForm() {
-    setClientName(""); setClientEmail(""); setClientAddress("");
+    setClientName(""); setClientEmail(""); setClientPhone(""); setClientAddress("");
     setInvoiceNumber(formatInvoiceNumber(parseInvoiceDigits(invoiceNumber) + 1)); setIssueDate(todayIso()); setDueDate("");
     setCurrency("USD"); setTaxRate(""); setDiscount("");
     setNotes(""); setItems([defaultItem()]); setStatus("");
@@ -852,6 +864,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
       <Text style={styles.sectionTitle}>Client</Text>
       <TextInput style={styles.input} placeholder="Client name" placeholderTextColor="#9a8f87" value={clientName} onChangeText={(v) => { setClientName(v); scheduleAutoSave(); }} />
       <TextInput style={styles.input} placeholder="Client email" placeholderTextColor="#9a8f87" keyboardType="email-address" autoCapitalize="none" value={clientEmail} onChangeText={(v) => { setClientEmail(v); scheduleAutoSave(); }} />
+      <TextInput style={styles.input} placeholder="Client phone (555-555-5555)" placeholderTextColor="#9a8f87" keyboardType="phone-pad" value={clientPhone} onChangeText={(v) => { setClientPhone(formatPhone(v)); scheduleAutoSave(); }} maxLength={12} />
       <TextInput style={[styles.input, styles.textarea]} placeholder="Client address" placeholderTextColor="#9a8f87" multiline value={clientAddress} onChangeText={(v) => { setClientAddress(v); scheduleAutoSave(); }} />
 
       <Text style={styles.sectionTitle}>Invoice details</Text>
@@ -932,6 +945,7 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
               <Text style={styles.previewPartyLabel}>TO</Text>
               {clientName ? <Text style={styles.previewPartyName}>{clientName}</Text> : null}
               {clientEmail ? <Text style={styles.previewPartySub}>{clientEmail}</Text> : null}
+              {clientPhone ? <Text style={styles.previewPartySub}>{clientPhone}</Text> : null}
             </View>
           </View>
           <View style={styles.previewDivider} />

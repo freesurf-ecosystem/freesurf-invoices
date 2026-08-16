@@ -1,23 +1,8 @@
-# cnxt to invoices — Development Roadmap
+# freesurf invoices — Development Roadmap
 
-Concept: Invoices / payment processing
-
-
-This document tracks planned, in-progress, and potential features. The north star is a free, simple, no-nonsense invoice generator that anyone can use without signing up. Everything beyond that is additive.
-
----
-
-## Shipped
-
-- Free invoice generator with live preview
-- Print-to-PDF export (jsPDF, no browser headers)
-- Supabase auth (email + password, email confirmation)
-- Business profile saved to Supabase (synced across devices)
-- Logo upload via Supabase Storage, restored on next login
-- Draft saving to Supabase
-- Previous invoices library
-- Menu auth state (sign in / log out toggle)
-- Instant workspace load using localStorage session cache
+# Consider
+[ ] Estimate making
+[ ] Payment processing
 
 ---
 

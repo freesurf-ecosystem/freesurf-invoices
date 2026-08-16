@@ -1,0 +1,54 @@
+name: Build Android
+
+# Free Android release build — replaces EAS cloud builds.
+# Produces an installable APK (debug-signed by default). For Play Store release,
+# add a keystore + signing config (see README note).
+#
+# Required secret: none for a test APK. For Play Store: ANDROID_KEYSTORE_* secrets.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-android.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm install
+
+      - name: Prebuild Android
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: mobile/android/app/build/outputs/apk/release/*.apk
