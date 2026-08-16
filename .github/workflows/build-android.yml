@@ -45,7 +45,7 @@ jobs:
 
       - name: Build release APK
         working-directory: mobile/android
-        run: ./gradlew assembleRelease
+        run: bash ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
