@@ -22,6 +22,9 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    env:
+      SENTRY_DISABLE_AUTO_UPLOAD: "true"
+      SENTRY_DISABLE_NATIVE_DEBUG_UPLOAD: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
