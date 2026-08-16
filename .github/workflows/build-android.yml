@@ -48,6 +48,10 @@ jobs:
         working-directory: mobile/android
         run: printf '\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n' >> gradle.properties
 
+      - name: Ensure debug keystore
+        working-directory: mobile/android
+        run: test -f app/debug.keystore || keytool -genkeypair -v -keystore app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Setup Android signing
         working-directory: mobile/android
         env:
