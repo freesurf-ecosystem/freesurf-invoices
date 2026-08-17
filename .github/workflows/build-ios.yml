@@ -60,7 +60,14 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: mobile/ios
-        run: if [ -f Podfile ]; then pod install; fi
+        run: |
+          if [ ! -f Podfile ]; then exit 0; fi
+          for i in 1 2 3 4 5; do
+            if pod install; then exit 0; fi
+            echo "pod install attempt $i failed (CDN rate limit?), retrying in 60s..."
+            sleep 60
+          done
+          exit 1
 
       - name: Install signing certificate + profile
         env:
