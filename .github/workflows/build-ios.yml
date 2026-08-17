@@ -46,6 +46,18 @@ jobs:
         working-directory: mobile
         run: npm install
 
+      - name: Set iOS build number
+        working-directory: mobile
+        run: |
+          BUILD="$(date +%Y%m%d%H%M)" node -e "
+            const fs = require('fs');
+            const j = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            j.expo.ios = j.expo.ios || {};
+            j.expo.ios.buildNumber = process.env.BUILD;
+            fs.writeFileSync('app.json', JSON.stringify(j, null, 2));
+            console.log('ios.buildNumber =', process.env.BUILD);
+          "
+
       - name: Prebuild iOS
         working-directory: mobile
         run: npx expo prebuild --platform ios --no-install
