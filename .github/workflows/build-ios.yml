@@ -25,6 +25,7 @@ jobs:
     env:
       SENTRY_DISABLE_AUTO_UPLOAD: "true"
       SENTRY_DISABLE_NATIVE_DEBUG_UPLOAD: "true"
+      EAS_BUILD_PROFILE: "production"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,6 +35,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: mobile/node_modules
+          key: nm-${{ hashFiles('mobile/package-lock.json') }}
+
       - name: Install dependencies
         working-directory: mobile
         run: npm install
@@ -41,6 +48,13 @@ jobs:
       - name: Prebuild iOS
         working-directory: mobile
         run: npx expo prebuild --platform ios --no-install
+
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: mobile/ios/Pods
+          key: pods-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: pods-
 
       - name: Install CocoaPods
         working-directory: mobile/ios
@@ -61,10 +75,17 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$PROFILE_B64" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision"
 
+      - name: Cache Derived Data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: dd-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: dd-
+
       - name: Archive
         working-directory: mobile/ios
         run: |
-          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          WORKSPACE=$(ls -d *.xcworkspace | grep -v 'Dev' | head -1)
           SCHEME="${WORKSPACE%.xcworkspace}"
           echo "workspace=$WORKSPACE scheme=$SCHEME"
           PROFILE_UUID=$(security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision" | plutil -extract UUID raw -)
