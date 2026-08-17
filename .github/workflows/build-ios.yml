@@ -40,6 +40,7 @@ jobs:
         with:
           path: mobile/node_modules
           key: nm-${{ hashFiles('mobile/package-lock.json') }}
+          save-always: true
 
       - name: Install dependencies
         working-directory: mobile
@@ -55,6 +56,7 @@ jobs:
           path: mobile/ios/Pods
           key: pods-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: pods-
+          save-always: true
 
       - name: Install CocoaPods
         working-directory: mobile/ios
@@ -81,6 +83,7 @@ jobs:
           path: ~/Library/Developer/Xcode/DerivedData
           key: dd-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: dd-
+          save-always: true
 
       - name: Archive
         working-directory: mobile/ios
