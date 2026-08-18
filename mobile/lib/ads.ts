@@ -1,6 +1,10 @@
 import { Platform } from "react-native";
 import { InterstitialAd, RewardedAd, TestIds, AdEventType, RewardedAdEventType } from "react-native-google-mobile-ads";
 
+// Ads are disabled until the app is published + verified in AdMob.
+// Flip to true when ready to serve live ads.
+const ADS_ENABLED = false;
+
 const INTERSTITIAL_ID = Platform.select({
   ios: TestIds.INTERSTITIAL,
   android: TestIds.INTERSTITIAL,
@@ -27,6 +31,7 @@ function createRewarded(): RewardedAd {
 }
 
 export async function showInterstitial(): Promise<void> {
+  if (!ADS_ENABLED) return;
   if (!interstitial || !interstitial.loaded) {
     interstitial = createInterstitial();
     interstitial.load();
@@ -40,6 +45,7 @@ export async function showInterstitial(): Promise<void> {
 }
 
 export async function showRewarded(): Promise<boolean> {
+  if (!ADS_ENABLED) return false;
   if (!rewarded || !rewarded.loaded) {
     rewarded = createRewarded();
     rewarded.load();
