@@ -35,12 +35,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
         with:
           path: mobile/node_modules
           key: nm-${{ hashFiles('mobile/package-lock.json') }}
-          save-always: true
 
       - name: Install dependencies
         working-directory: mobile
@@ -62,13 +61,12 @@ jobs:
         working-directory: mobile
         run: npx expo prebuild --platform ios --no-install
 
-      - name: Cache Pods
-        uses: actions/cache@v4
+      - name: Restore Pods cache
+        uses: actions/cache/restore@v4
         with:
           path: mobile/ios/Pods
           key: pods-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: pods-
-          save-always: true
 
       - name: Install CocoaPods
         working-directory: mobile/ios
@@ -96,13 +94,12 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$PROFILE_B64" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision"
 
-      - name: Cache Derived Data
-        uses: actions/cache@v4
+      - name: Restore Derived Data cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: dd-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: dd-
-          save-always: true
 
       - name: Archive
         working-directory: mobile/ios
@@ -157,3 +154,24 @@ jobs:
           echo "$API_KEY_B64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
           IPA=$(ls "$RUNNER_TEMP/export"/*.ipa | head -1)
           xcrun altool --upload-app --type ios -f "$IPA" --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER"
+
+      - name: Save node_modules cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: mobile/node_modules
+          key: nm-${{ hashFiles('mobile/package-lock.json') }}
+
+      - name: Save Pods cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: mobile/ios/Pods
+          key: pods-${{ hashFiles('mobile/package-lock.json') }}
+
+      - name: Save Derived Data cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: dd-${{ hashFiles('mobile/package-lock.json') }}
