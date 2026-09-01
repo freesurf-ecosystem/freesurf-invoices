@@ -1,6 +1,7 @@
 # freesurf invoices — Development Roadmap
 
 # Consider
+[ ] remove/ consolidate tables that don't have invoices in front of them
 [ ] Estimate making
 [ ] Payment processing
 
