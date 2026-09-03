@@ -46,6 +46,20 @@ async function getClient() {
   }
 }
 
+async function oauthSignIn(provider) {
+  const client = await getClient();
+  if (!client) return;
+  // Return to this auth page; onAuthStateChange (SIGNED_IN) redirects into the app.
+  const { error } = await client.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: window.location.origin + window.location.pathname },
+  });
+  if (error) setFeedback(error.message, "error");
+}
+
+document.getElementById("btn-google")?.addEventListener("click", () => oauthSignIn("google"));
+document.getElementById("btn-apple")?.addEventListener("click", () => oauthSignIn("apple"));
+
 async function refreshSessionStatus() {
   const client = await getClient();
   if (!client) {
