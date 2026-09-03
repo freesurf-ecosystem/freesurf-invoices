@@ -86,17 +86,17 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
     setLoading(false);
   }
 
-  async function handleGoogleSignIn() {
+  async function handleOAuthSignIn(provider: "google" | "apple") {
     setOauthLoading(true);
     setMessage(null);
     try {
       const redirectTo = Linking.createURL("/");
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+        provider,
         options: { redirectTo, skipBrowserRedirect: true },
       });
       if (error || !data.url) {
-        setMessage({ text: error?.message ?? "Could not start Google sign-in.", kind: "error" });
+        setMessage({ text: error?.message ?? `Could not start ${provider} sign-in.`, kind: "error" });
         return;
       }
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
@@ -216,7 +216,6 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
           )}
         </Pressable>
 
-{/* Google sign-in hidden until OAuth is configured
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>or</Text>
@@ -225,7 +224,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
 
         <Pressable
           style={[styles.socialBtn, oauthLoading && styles.buttonDisabled]}
-          onPress={handleGoogleSignIn}
+          onPress={() => handleOAuthSignIn("google")}
           disabled={oauthLoading}
         >
           {oauthLoading ? (
@@ -234,7 +233,18 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
             <Text style={styles.socialBtnLabel}>Continue with Google</Text>
           )}
         </Pressable>
-*/}
+
+        <Pressable
+          style={[styles.socialBtn, oauthLoading && styles.buttonDisabled]}
+          onPress={() => handleOAuthSignIn("apple")}
+          disabled={oauthLoading}
+        >
+          {oauthLoading ? (
+            <ActivityIndicator color="#1f1a17" />
+          ) : (
+            <Text style={styles.socialBtnLabel}>Continue with Apple</Text>
+          )}
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
