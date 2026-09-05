@@ -44,6 +44,13 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
     return true;
   }
 
+  async function subscribeDigest(address?: string) {
+    if (!address || !digest) return;
+    try {
+      await supabase.functions.invoke("feedfree-create-signup", { body: { email: address, topics: [] } });
+    } catch { /* non-critical */ }
+  }
+
   async function handleSignIn() {
     if (!email.trim() || !password) return;
     setLoading(true);
@@ -88,9 +95,11 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
         return;
       }
       if (data.session?.user) {
+        void subscribeDigest(data.session.user.email);
         onAuthenticated();
         return;
       }
+      void subscribeDigest(email.trim());
       setMessage({ text: "Check your email to confirm your account.", kind: "success" });
     } catch (e: any) {
       setMessage({ text: e?.message || "Connection failed.", kind: "error" });
@@ -121,6 +130,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
         const refreshToken = params.get("refresh_token") ?? "";
         if (accessToken) {
           await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (digest) { const { data: sd } = await supabase.auth.getSession(); void subscribeDigest(sd.session?.user?.email); }
           onAuthenticated();
         } else {
           setMessage({ text: "Sign-in did not complete. Please try again.", kind: "error" });
@@ -340,7 +350,7 @@ const styles = StyleSheet.create({
   checkRow: { flexDirection: "row", gap: 10, alignItems: "flex-start", marginTop: 4 },
   checkBox: { color: "#0d6b61", fontWeight: "700", fontSize: 18, lineHeight: 20 },
   consentText: { color: "#1f1a17", fontSize: 14, flex: 1 },
-  digestText: { color: "#9a8f87", fontSize: 13, flex: 1 },
+  digestText: { color: "#1f1a17", fontSize: 14, flex: 1 },
   link: { color: "#0d6b61", textDecorationLine: "underline" },
   button: {
     backgroundColor: "#0d6b61",
