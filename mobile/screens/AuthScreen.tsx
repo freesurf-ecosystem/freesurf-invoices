@@ -17,6 +17,10 @@ import { supabase } from "../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
+const TERMS_URL = "https://freesurf.tools/terms";
+const PRIVACY_URL = "https://freesurf.tools/privacy";
+const DIGEST_URL = "https://feedfree.tech";
+
 type Props = {
   onAuthenticated: () => void;
   onBack?: () => void;
@@ -31,7 +35,14 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const [digest, setDigest] = useState(false);
   const [message, setMessage] = useState<{ text: string; kind: "error" | "success" | "info" } | null>(null);
+
+  function requireConsent(): boolean {
+    if (!agree) { setMessage({ text: "Please agree to the Terms and Privacy Policy.", kind: "error" }); return false; }
+    return true;
+  }
 
   async function handleSignIn() {
     if (!email.trim() || !password) return;
@@ -66,6 +77,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
       setMessage({ text: "Passwords don't match.", kind: "error" });
       return;
     }
+    if (!requireConsent()) return;
     setLoading(true);
     setMessage(null);
     try {
@@ -87,6 +99,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
   }
 
   async function handleOAuthSignIn(provider: "google" | "apple") {
+    if (!requireConsent()) return;
     setOauthLoading(true);
     setMessage(null);
     try {
@@ -197,6 +210,19 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
             </Pressable>
           </View>
         )}
+
+        <Pressable onPress={() => setAgree(!agree)} style={styles.checkRow}>
+          <Text style={styles.checkBox}>{agree ? "☑" : "☐"}</Text>
+          <Text style={styles.consentText}>
+            I agree to the <Text style={styles.link} onPress={() => Linking.openURL(TERMS_URL)}>Terms</Text> and <Text style={styles.link} onPress={() => Linking.openURL(PRIVACY_URL)}>Privacy Policy</Text>
+          </Text>
+        </Pressable>
+        <Pressable onPress={() => setDigest(!digest)} style={styles.checkRow}>
+          <Text style={[styles.checkBox, { color: "#9a8f87" }]}>{digest ? "☑" : "☐"}</Text>
+          <Text style={styles.digestText}>
+            Subscribe to the <Text style={styles.link} onPress={() => Linking.openURL(DIGEST_URL)}>FeedFree Digest</Text> — Curated blog-length social posts covering AI, SEO, social media marketing and more - from X and LinkedIn
+          </Text>
+        </Pressable>
 
         {message && (
           <Text style={[styles.feedback, message.kind === "error" ? styles.feedbackError : styles.feedbackSuccess]}>
@@ -311,6 +337,11 @@ const styles = StyleSheet.create({
   feedback: { fontSize: 13, paddingHorizontal: 4 },
   feedbackError: { color: "#9b2020" },
   feedbackSuccess: { color: "#0d6b61" },
+  checkRow: { flexDirection: "row", gap: 10, alignItems: "flex-start", marginTop: 4 },
+  checkBox: { color: "#0d6b61", fontWeight: "700", fontSize: 18, lineHeight: 20 },
+  consentText: { color: "#1f1a17", fontSize: 14, flex: 1 },
+  digestText: { color: "#9a8f87", fontSize: 13, flex: 1 },
+  link: { color: "#0d6b61", textDecorationLine: "underline" },
   button: {
     backgroundColor: "#0d6b61",
     borderRadius: 12,
