@@ -19,6 +19,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const TERMS_URL = "https://freesurf.tools/terms";
 const PRIVACY_URL = "https://freesurf.tools/privacy";
+const AI_URL = "https://freesurf.tools/ai-processing";
 const DIGEST_URL = "https://feedfree.tech";
 
 type Props = {
@@ -224,7 +225,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
         <Pressable onPress={() => setAgree(!agree)} style={styles.checkRow}>
           <Text style={styles.checkBox}>{agree ? "☑" : "☐"}</Text>
           <Text style={styles.consentText}>
-            I agree to the <Text style={styles.link} onPress={() => Linking.openURL(TERMS_URL)}>Terms</Text> and <Text style={styles.link} onPress={() => Linking.openURL(PRIVACY_URL)}>Privacy Policy</Text>
+            I agree to the <Text style={styles.link} onPress={() => Linking.openURL(TERMS_URL)}>Terms</Text>, <Text style={styles.link} onPress={() => Linking.openURL(PRIVACY_URL)}>Privacy Policy</Text>, and <Text style={styles.link} onPress={() => Linking.openURL(AI_URL)}>AI Processing</Text>
           </Text>
         </Pressable>
         <Pressable onPress={() => setDigest(!digest)} style={styles.checkRow}>
