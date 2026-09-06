@@ -17,9 +17,9 @@ import { supabase } from "../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const TERMS_URL = "https://Free Surf.tools/terms";
-const PRIVACY_URL = "https://Free Surf.tools/privacy";
-const AI_URL = "https://Free Surf.tools/ai-processing";
+const TERMS_URL = "https://freesurf.tools/terms";
+const PRIVACY_URL = "https://freesurf.tools/privacy";
+const AI_URL = "https://freesurf.tools/ai-processing";
 const DIGEST_URL = "https://feedfree.tech";
 
 type Props = {
