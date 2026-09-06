@@ -116,7 +116,11 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
       const redirectTo = Linking.createURL("/");
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo, skipBrowserRedirect: true },
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+          ...(provider === "google" ? { scopes: "openid email" } : {}),
+        },
       });
       if (error || !data.url) {
         setMessage({ text: error?.message ?? `Could not start ${provider} sign-in.`, kind: "error" });
