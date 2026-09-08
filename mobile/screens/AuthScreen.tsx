@@ -152,7 +152,7 @@ export default function AuthScreen({ onAuthenticated, onBack }: Props) {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
-          <Text style={styles.brand}>Free Surf Invoices</Text>
+          <Text style={styles.brand}>FreeSurf Invoices</Text>
           {onBack ? (
             <Pressable onPress={onBack} hitSlop={12} style={styles.closeBtn}>
               <Text style={styles.closeBtnText}>✕</Text>
