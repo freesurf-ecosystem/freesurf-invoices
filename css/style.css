@@ -1125,14 +1125,9 @@ textarea:focus {
   .freesurf-footer-bottom { flex-direction: column; text-align: center; }
 }
 
-/* -- App promo (landing) -- */
-.app-promo { border-top: 1px solid var(--border, #e6e4df); background: var(--bg-alt, #f8f8f6); }
-.app-promo-inner { max-width: 1080px; margin: 0 auto; padding: 32px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
-.app-promo h2 { margin: 0 0 6px; font-size: 20px; }
-.app-promo p { margin: 0; color: var(--text-muted, #8a8178); }
+/* -- App links (mobile download buttons) -- */
+.app-links { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .app-promo-btn { display: inline-block; background: var(--brand, #1d1b18); color: #fff; text-decoration: none; font-weight: 600; border-radius: 10px; padding: 12px 20px; }
-.app-promo-buttons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-@media (max-width: 640px) { .app-promo-inner { flex-direction: column; text-align: center; } }
 
 /* -- Auth: OAuth buttons -- */
 .auth-oauth { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
