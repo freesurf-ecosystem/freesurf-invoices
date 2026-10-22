@@ -51,10 +51,6 @@
 
       <main class="layout">
         <section class="panel panel-form">
-          <div class="app-links">
-            <a class="app-promo-btn" href="https://play.google.com/store/apps/details?id=tools.freesurf.invoices" target="_blank" rel="noopener">Get it on Google Play</a>
-            <a class="app-promo-btn" href="https://apps.apple.com/us/app/freesurf-invoice-maker/id6797242505" target="_blank" rel="noopener">Download on the App Store</a>
-          </div>
           <form id="invoice-form">
             <div class="form-section">
               <div class="section-heading">
@@ -181,8 +177,13 @@
           </form>
         </section>
 
-        <section class="panel panel-preview">
-          <div class="preview-toolbar">
+        <div class="preview-column">
+          <div class="app-links">
+            <a class="app-promo-btn" href="https://play.google.com/store/apps/details?id=tools.freesurf.invoices" target="_blank" rel="noopener">Get it on Google Play</a>
+            <a class="app-promo-btn" href="https://apps.apple.com/us/app/freesurf-invoice-maker/id6797242505" target="_blank" rel="noopener">Download on the App Store</a>
+          </div>
+          <section class="panel panel-preview">
+            <div class="preview-toolbar">
             <div>
               <span>Live preview</span>
               <span id="save-status" class="save-status">Draft stored in your browser.</span>
@@ -193,7 +194,8 @@
             </div>
           </div>
           <article id="invoice-preview" class="invoice-preview"></article>
-        </section>
+          </section>
+        </div>
       </main>
 
       <!-- FreeSurf footer -->

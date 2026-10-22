@@ -563,8 +563,14 @@ a {
 
 .panel-preview {
   padding: 16px;
+}
+
+.preview-column {
+  display: flex;
+  flex-direction: column;
   position: sticky;
   top: 18px;
+  align-self: start;
 }
 
 .form-section + .form-section {
@@ -895,7 +901,8 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .panel-preview {
+  .panel-preview,
+  .preview-column {
     position: static;
   }
 }
