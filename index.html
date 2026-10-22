@@ -35,7 +35,8 @@
                 <a class="app-menu-item app-menu-link" href="./index.html">Create invoice</a>
                 <a class="app-menu-item app-menu-link" href="./drafts.html">Drafts</a>
                 <a class="app-menu-item app-menu-link" href="./invoices.html">Previous invoices</a>
-                <span id="menu-auth-area" class="app-menu-item" style="color:#5f6b7a;font-size:0.8rem;padding:8px 12px;">All data saved in your browser</span>
+                <a id="menu-auth-link" class="app-menu-item app-menu-link" href="./auth.html">Sign in / Sign up</a>
+                <button id="menu-signout-button" class="app-menu-item hidden" type="button">Log out</button>
               </div>
             </div>
           </div>
@@ -47,6 +48,19 @@
           </p>
         </div>
       </header>
+
+      <section class="app-promo">
+        <div class="app-promo-inner">
+          <div>
+            <h2>Invoice on the go</h2>
+            <p>Create and send invoices from your phone with the FreeSurf Invoices app.</p>
+          </div>
+          <div class="app-promo-buttons">
+            <a class="app-promo-btn" href="https://play.google.com/store/apps/details?id=tools.freesurf.invoices" target="_blank" rel="noopener">Get it on Google Play</a>
+            <a class="app-promo-btn" href="https://apps.apple.com/us/app/freesurf-invoice-maker/id6797242505" target="_blank" rel="noopener">Download on the App Store</a>
+          </div>
+        </div>
+      </section>
 
       <main class="layout">
         <section class="panel panel-form">
@@ -190,16 +204,6 @@
           <article id="invoice-preview" class="invoice-preview"></article>
         </section>
       </main>
-
-      <section class="app-promo">
-        <div class="app-promo-inner">
-          <div>
-            <h2>Invoice on the go</h2>
-            <p>Create and send invoices from your phone with the FreeSurf Invoices app.</p>
-          </div>
-          <a class="app-promo-btn" href="https://play.google.com/store/apps/details?id=tools.freesurf.invoices" target="_blank" rel="noopener">Get it on Google Play</a>
-        </div>
-      </section>
 
       <!-- FreeSurf footer -->
       <footer class="freesurf-footer">
