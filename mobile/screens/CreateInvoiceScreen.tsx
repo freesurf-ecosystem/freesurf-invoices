@@ -940,6 +940,8 @@ ${notes ? `<div class="notes"><strong>Notes</strong><br/>${notes}</div>` : ""}
               {businessName ? <Text style={styles.previewPartyName}>{businessName}</Text> : null}
               {businessEmail ? <Text style={styles.previewPartySub}>{businessEmail}</Text> : null}
               {businessPhone ? <Text style={styles.previewPartySub}>{businessPhone}</Text> : null}
+              {businessWebsite ? <Text style={styles.previewPartySub}>{businessWebsite}</Text> : null}
+              {businessAddress ? <Text style={styles.previewPartySub}>{businessAddress}</Text> : null}
             </View>
             <View style={styles.previewParty}>
               <Text style={styles.previewPartyLabel}>TO</Text>

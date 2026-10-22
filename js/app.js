@@ -865,7 +865,12 @@ async function exportInvoicePdfDirect() {
     doc.setFontSize(9.5);
     doc.setTextColor(70, 70, 70);
     let metaLineY = headerTop + 0.7;
-    [state.businessEmail, state.businessPhone, state.businessWebsite]
+    [
+      state.businessEmail,
+      state.businessPhone,
+      state.businessWebsite,
+      ...(state.businessAddress || "").split("\n"),
+    ]
       .filter((v) => v && String(v).trim().length > 0)
       .forEach((line) => {
         doc.text(String(line), leftTextX, metaLineY);
@@ -1474,6 +1479,7 @@ function renderPreview() {
   const businessEmail = state.businessEmail ? `<p>${escapeHtml(state.businessEmail)}</p>` : "";
   const businessPhone = state.businessPhone ? `<p>${escapeHtml(state.businessPhone)}</p>` : "";
   const businessWebsite = state.businessWebsite ? `<p>${escapeHtml(state.businessWebsite)}</p>` : "";
+  const businessAddress = state.businessAddress ? `<p>${formatMultiline(state.businessAddress)}</p>` : "";
   const clientEmail = state.clientEmail ? `<p>${escapeHtml(state.clientEmail)}</p>` : "";
   const invoiceFooterMarkup = `
     <div class="preview-footer">
@@ -1498,6 +1504,7 @@ function renderPreview() {
           ${businessEmail}
           ${businessPhone}
           ${businessWebsite}
+          ${businessAddress}
         </div>
       </div>
       <div class="preview-meta">
