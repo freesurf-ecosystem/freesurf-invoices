@@ -1,46 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- Invoice maker (main tool) -->
   <url>
     <loc>https://invoices.freesurf.tools/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
   </url>
-
-  <!-- Auth -->
   <url>
-    <loc>https://invoices.freesurf.tools/auth.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://invoices.freesurf.tools/auth</loc>
   </url>
-
-  <!-- Saved drafts (requires auth — lower priority) -->
-  <url>
-    <loc>https://invoices.freesurf.tools/drafts.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Previous invoices (requires auth — lower priority) -->
-  <url>
-    <loc>https://invoices.freesurf.tools/invoices.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Privacy policy -->
-  <url>
-    <loc>https://invoices.freesurf.tools/privacy.html</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
-  <!-- Terms of service -->
-  <url>
-    <loc>https://invoices.freesurf.tools/terms.html</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-
 </urlset>
